@@ -36,3 +36,27 @@ We used the **Celeb-DF (v2) dataset**, which contains real and deepfake videos o
 
 ---
 
+## 🛠️ Tools & Technologies
+
+### 🔹 AI / Machine Learning
+- Python
+- OpenCV
+- MTCNN
+- NumPy
+- TensorFlow / PyTorch
+- Matplotlib
+
+### 🔹 Backend
+- FastAPI (recommended)
+- Uvicorn
+
+### 🔹 Frontend
+- HTML
+- CSS
+- JavaScript
+
+### 🔹 Development Tools
+- VS Code
+- Git & GitHub
+
+---
