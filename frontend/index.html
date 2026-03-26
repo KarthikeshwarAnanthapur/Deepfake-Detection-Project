@@ -1,25 +1,162 @@
-<!--hello-->
+<!-- Hello-->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Deepfake Detection</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Deepfake Detection using Vision Transformer — upload a face image to detect if it's real or fake." />
+  <title>DeepGuard — Deepfake Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<h1>Deepfake Detection</h1>
+  <!-- ──────────────────────────────────
+       Animated background orbs
+  ────────────────────────────────── -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
 
-<input type="file" id="imageInput">
-<br><br>
+  <!-- ──────────────────────────────────
+       Header
+  ────────────────────────────────── -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon" aria-hidden="true">🛡️</div>
+      <span class="logo-text">Deep<span class="accent">Guard</span></span>
+    </div>
+    <div class="badge">Powered by ViT</div>
+  </header>
 
-<img id="preview" width="200"/>
-<br><br>
+  <!-- ──────────────────────────────────
+       Main content
+  ────────────────────────────────── -->
+  <main class="main">
 
-<button onclick="uploadImage()">Predict</button>
+    <!-- Hero -->
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="hero-title">
+        Detect <span class="gradient-text">Deepfakes</span><br/>Instantly
+      </h1>
+      <p class="hero-subtitle">
+        Upload a face image and our Vision Transformer model will tell you
+        whether it's <strong>Real</strong> or <strong>AI-generated</strong> in seconds.
+      </p>
+    </section>
 
-<h3 id="result"></h3>
+    <!-- Upload + Result card -->
+    <div class="card-row">
 
-<script src="script.js"></script>
+      <!-- Upload card -->
+      <section class="card upload-card" aria-label="Image upload">
+        <h2 class="card-title">Upload Image</h2>
 
+        <!-- Drop zone -->
+        <div
+          id="drop-zone"
+          class="drop-zone"
+          role="button"
+          tabindex="0"
+          aria-label="Drop an image here or click to browse"
+        >
+          <div class="drop-icon" id="drop-icon" aria-hidden="true">📁</div>
+          <p class="drop-text" id="drop-text">
+            Drag &amp; drop a face image here<br/>
+            <span class="drop-sub">or click to browse</span>
+          </p>
+          <input
+            type="file"
+            id="file-input"
+            accept="image/jpeg,image/png,image/webp"
+            class="hidden-input"
+            aria-label="Choose image file"
+          />
+        </div>
+
+        <!-- Image preview -->
+        <div id="preview-container" class="preview-container hidden">
+          <img id="preview-img" src="" alt="Uploaded face preview" class="preview-img" />
+          <button id="clear-btn" class="clear-btn" aria-label="Remove image">✕ Remove</button>
+        </div>
+
+        <!-- File info -->
+        <div id="file-info" class="file-info hidden"></div>
+
+        <!-- Detect button -->
+        <button id="detect-btn" class="detect-btn" disabled aria-label="Run deepfake detection">
+          <span class="btn-text">🔍 Detect</span>
+          <span class="btn-spinner hidden" aria-hidden="true"></span>
+        </button>
+      </section>
+
+      <!-- Result card -->
+      <section class="card result-card" id="result-card" aria-label="Detection result" aria-live="polite">
+        <div class="result-placeholder" id="result-placeholder">
+          <div class="placeholder-icon" aria-hidden="true">🔮</div>
+          <p>Results will appear here after detection</p>
+        </div>
+
+        <!-- Actual result (hidden until prediction) -->
+        <div id="result-content" class="result-content hidden">
+          <div id="result-badge" class="result-badge"></div>
+          <h3 id="result-label" class="result-label"></h3>
+          <p class="result-desc" id="result-desc"></p>
+
+          <div class="confidence-section">
+            <div class="confidence-label-row">
+              <span class="confidence-title">Confidence</span>
+              <span id="confidence-pct" class="confidence-pct"></span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="Confidence score">
+              <div id="progress-bar" class="progress-bar"></div>
+            </div>
+          </div>
+
+          <div class="meta-row">
+            <div class="meta-item">
+              <span class="meta-label">Model</span>
+              <span id="meta-model" class="meta-value">—</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Decision</span>
+              <span id="meta-decision" class="meta-value">—</span>
+            </div>
+          </div>
+
+          <button id="analyze-again-btn" class="analyze-again-btn">
+            🔄 Analyze Another Image
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- History Panel -->
+    <section class="history-section" id="history-section" aria-label="Prediction history">
+      <div class="history-header">
+        <h2 class="history-title">📋 Prediction History</h2>
+        <button id="clear-history-btn" class="clear-history-btn" aria-label="Clear history">Clear</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="history-empty" id="history-empty">No predictions yet.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ──────────────────────────────────
+       Toast notification
+  ────────────────────────────────── -->
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+  <footer class="footer">
+    <p>DeepGuard &copy; 2025 &mdash; Deepfake Detection using Vision Transformer (ViT)</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>

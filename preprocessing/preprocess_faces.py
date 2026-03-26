@@ -97,30 +97,7 @@ def main():
 if __name__ == "__main__":
     main()
 
-'''import cv2 
-import os
-from mtcnn import MTCNN
-from tqdm import tqdm
-
-OpenCV	Video processing
-os	File handling
-MTCNN	Face detection
-tqdm	Progress bar
-
-# ==========================================
-# CONFIGURATION
-# ==========================================
-# Change this to where you extracted Celeb-DF-v2
-DATASET_ROOT = "./Celeb-DF-v2" 
-OUTPUT_ROOT = "./processed_faces"
-
-# Folders inside Celeb-DF-v2 to process
-CATEGORIES = {
-    "Celeb-real": "Real",
-    "YouTube-real": "Real",
-    "Celeb-synthesis": "Fake"
-}
-
+'''
 # Vision Transformers and ResNet usually expect 224x224 images
 TARGET_SIZE = (224, 224)
 
