@@ -24,7 +24,7 @@ IMG_SIZE = (224, 224)
 model = build_vit_model()
 model.load_weights(MODEL_PATH)
 
-print("✅ Model loaded successfully!")
+print("Model loaded successfully!")
 
 
 # =========================
@@ -41,7 +41,7 @@ def preprocess_image(img_path):
     img = cv2.imread(img_path)
 
     if img is None:
-        print("❌ Error: Image not found")
+        print("Error: Image not found")
         return None
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -50,7 +50,7 @@ def preprocess_image(img_path):
     faces = detector.detect_faces(img)
 
     if len(faces) == 0:
-        print("❌ No face detected")
+        print("No face detected")
         return None
 
     x, y, w, h = faces[0]['box']
@@ -65,7 +65,7 @@ def preprocess_image(img_path):
     face = img[y:y+h, x:x+w]
 
     if face.size == 0:
-        print("❌ Invalid face crop")
+        print("Invalid face crop")
         return None
 
     face = cv2.resize(face, IMG_SIZE)
@@ -90,17 +90,17 @@ def predict_image(img_path):
 
     # Class 0: Fake, Class 1: Real
     if prediction > 0.6:
-        result_text = f"🟩 REAL ({prediction:.4f})"
+        result_text = f"REAL ({prediction:.4f})"
         status = "Real"
         confidence = prediction
         reason = "The model found no evidence of face-swapping boundaries or manipulation artifacts. The lighting and textures appear completely natural."
     elif prediction < 0.4:
-        result_text = f"🟥 FAKE ({1 - prediction:.4f})"
+        result_text = f"FAKE ({1 - prediction:.4f})"
         status = "Fake"
         confidence = 1 - prediction
         reason = "The model detected anomalies indicative of a face-swap, such as boundary blending issues, unnatural skin smoothing, or localized warping."
     else:
-        result_text = f"⚠️ UNCERTAIN ({prediction:.4f})"
+        result_text = f"UNCERTAIN ({prediction:.4f})"
         status = "Uncertain"
         confidence = prediction
         reason = "The model cannot confidently verify this image. It lacks strong manipulation artifacts, but may contain noise or low resolution preventing a clear authentic read."
@@ -127,6 +127,6 @@ if __name__ == "__main__":
         image_path = sys.argv[1]
 
         if not os.path.exists(image_path):
-            print("❌ File does not exist")
+            print("File does not exist")
         else:
             predict_image(image_path)

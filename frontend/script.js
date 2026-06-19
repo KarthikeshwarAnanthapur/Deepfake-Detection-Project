@@ -19,31 +19,31 @@ const API_URL = "http://localhost:8000/predict";
 // ──────────────────────────────────────────────
 // DOM references
 // ──────────────────────────────────────────────
-const dropZone = document.getElementById("drop-zone");
-const fileInput = document.getElementById("file-input");
+const dropZone         = document.getElementById("drop-zone");
+const fileInput        = document.getElementById("file-input");
 const previewContainer = document.getElementById("preview-container");
-const previewImg = document.getElementById("preview-img");
-const clearBtn = document.getElementById("clear-btn");
-const fileInfo = document.getElementById("file-info");
-const detectBtn = document.getElementById("detect-btn");
-const btnText = detectBtn.querySelector(".btn-text");
-const btnSpinner = detectBtn.querySelector(".btn-spinner");
+const previewImg       = document.getElementById("preview-img");
+const clearBtn         = document.getElementById("clear-btn");
+const fileInfo         = document.getElementById("file-info");
+const detectBtn        = document.getElementById("detect-btn");
+const btnText          = detectBtn.querySelector(".btn-text");
+const btnSpinner       = detectBtn.querySelector(".btn-spinner");
 
 const resultPlaceholder = document.getElementById("result-placeholder");
-const resultContent = document.getElementById("result-content");
-const resultBadge = document.getElementById("result-badge");
-const resultLabel = document.getElementById("result-label");
-const resultDesc = document.getElementById("result-desc");
-const confidencePct = document.getElementById("confidence-pct");
-const progressBar = document.getElementById("progress-bar");
-const reasonBlock = document.getElementById("reason-block");
-const resultReason = document.getElementById("result-reason");
-const metaModel = document.getElementById("meta-model");
-const metaDecision = document.getElementById("meta-decision");
-const analyzeAgainBtn = document.getElementById("analyze-again-btn");
+const resultContent     = document.getElementById("result-content");
+const resultBadge       = document.getElementById("result-badge");
+const resultLabel       = document.getElementById("result-label");
+const resultDesc        = document.getElementById("result-desc");
+const confidencePct     = document.getElementById("confidence-pct");
+const progressBar       = document.getElementById("progress-bar");
+const reasonBlock       = document.getElementById("reason-block");
+const resultReason      = document.getElementById("result-reason");
+const metaModel         = document.getElementById("meta-model");
+const metaDecision      = document.getElementById("meta-decision");
+const analyzeAgainBtn   = document.getElementById("analyze-again-btn");
 
-const historyList = document.getElementById("history-list");
-const historyEmpty = document.getElementById("history-empty");
+const historyList     = document.getElementById("history-list");
+const historyEmpty    = document.getElementById("history-empty");
 const clearHistoryBtn = document.getElementById("clear-history-btn");
 
 const toast = document.getElementById("toast");
@@ -51,11 +51,11 @@ const toast = document.getElementById("toast");
 // ──────────────────────────────────────────────
 // App State
 // ──────────────────────────────────────────────
-let currentFile = null;   // File object
+let currentFile    = null;   // File object
 let currentDataURL = null;   // base64 preview
 let predictionHistory = [];  // [{filename, dataURL, prediction, confidence, model}]
-let toastTimer = null;
-let cropper = null;   // Cropper instance
+let toastTimer     = null;
+let cropper        = null;   // Cropper instance
 
 // ──────────────────────────────────────────────
 // Toast Notifications
@@ -71,7 +71,7 @@ function showToast(message, type = "info", duration = 3500) {
   if (toastTimer) clearTimeout(toastTimer);
 
   toast.textContent = message;
-  toast.className = `toast toast-${type} show`;
+  toast.className   = `toast toast-${type} show`;
 
   toastTimer = setTimeout(() => {
     toast.classList.remove("show");
@@ -88,7 +88,7 @@ function showToast(message, type = "info", duration = 3500) {
  */
 function loadFile(file) {
   const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  const MAX_MB = 10;
+  const MAX_MB        = 10;
 
   if (!ALLOWED_TYPES.includes(file.type)) {
     showToast("❌ Please upload a JPEG, PNG, or WebP image.", "error");
@@ -117,7 +117,7 @@ function loadFile(file) {
 
     // Reset results when a new image is loaded
     resetResult();
-
+    
     // Initialize Cropper.js
     if (cropper) {
       cropper.destroy();
@@ -142,11 +142,11 @@ function clearFile() {
     cropper = null;
   }
   previewImg.style.maxHeight = ''; // reset preview styles
-
-  currentFile = null;
+  
+  currentFile    = null;
   currentDataURL = null;
   fileInput.value = "";
-  previewImg.src = "";
+  previewImg.src  = "";
   previewContainer.classList.add("hidden");
   fileInfo.classList.add("hidden");
   dropZone.classList.remove("hidden");
@@ -213,17 +213,17 @@ async function runDetection() {
 
   try {
     const formData = new FormData();
-
+    
     // Replace the file payload with the cropped blob
     if (cropper) {
       const croppedBlob = await new Promise((resolve) => {
         cropper.getCroppedCanvas({
-          maxWidth: 1024,
-          maxHeight: 1024
+            maxWidth: 1024,
+            maxHeight: 1024
         }).toBlob((blob) => resolve(blob), currentFile.type || "image/jpeg", 0.95);
       });
       formData.append("file", croppedBlob, currentFile.name);
-
+      
       // Update the current preview base64 so history shows the cropped version
       currentDataURL = cropper.getCroppedCanvas({ width: 224, height: 224 }).toDataURL(currentFile.type || "image/jpeg");
     } else {
@@ -232,7 +232,7 @@ async function runDetection() {
 
     const response = await fetch(API_URL, {
       method: "POST",
-      body: formData,
+      body:   formData,
     });
 
     if (!response.ok) {
@@ -245,12 +245,12 @@ async function runDetection() {
     }
 
     const data = await response.json();
-
+    
     // Catch logical errors returned by the backend (like "No face detected")
     if (data.error) {
       throw new Error(data.error);
     }
-
+    
     displayResult(data);
     addToHistory(data);
 
@@ -280,18 +280,18 @@ async function runDetection() {
  */
 function displayResult(data) {
   const { prediction, confidence, model_used, reason } = data;
-  const isReal = prediction === "Real";
+  const isReal      = prediction === "Real";
   const isUncertain = prediction === "Uncertain";
-  const cls = isReal ? "real" : (isUncertain ? "uncertain" : "fake");
-  const pct = Math.round(confidence * 100);
-  const emoji = isReal ? "✅" : (isUncertain ? "⚠️" : "🚨");
+  const cls         = isReal ? "real" : (isUncertain ? "uncertain" : "fake");
+  const pct         = Math.round(confidence * 100);
+  const emoji       = isReal ? "✅" : (isUncertain ? "⚠️" : "🚨");
 
   // Badge
-  resultBadge.className = `result-badge ${cls}`;
+  resultBadge.className  = `result-badge ${cls}`;
   resultBadge.textContent = `${emoji} ${prediction}`;
 
   // Label
-  resultLabel.className = `result-label ${cls}`;
+  resultLabel.className  = `result-label ${cls}`;
   resultLabel.textContent = prediction;
 
   // Description
@@ -324,12 +324,12 @@ function displayResult(data) {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       progressBar.style.transition = "width 0.9s cubic-bezier(.4,0,.2,1)";
-      progressBar.style.width = `${pct}%`;
+      progressBar.style.width      = `${pct}%`;
     });
   });
 
   // Meta
-  metaModel.textContent = model_used;
+  metaModel.textContent    = model_used;
   metaDecision.textContent = prediction;
   if (isReal) metaDecision.style.color = "var(--real-color)";
   else if (isUncertain) metaDecision.style.color = "#ffb703";
@@ -352,12 +352,12 @@ function displayResult(data) {
  */
 function addToHistory(data) {
   const entry = {
-    filename: currentFile.name,
-    dataURL: currentDataURL,
+    filename:   currentFile.name,
+    dataURL:    currentDataURL,
     prediction: data.prediction,
     confidence: Math.round(data.confidence * 100),
-    model: data.model_used,
-    timestamp: new Date().toLocaleTimeString(),
+    model:      data.model_used,
+    timestamp:  new Date().toLocaleTimeString(),
   };
   predictionHistory.unshift(entry);
   renderHistory();
@@ -372,7 +372,7 @@ function renderHistory() {
   }
 
   predictionHistory.forEach((entry) => {
-    const cls = entry.prediction === "Real" ? "real" : "fake";
+    const cls  = entry.prediction === "Real" ? "real" : "fake";
     const item = document.createElement("div");
     item.className = "history-item";
     item.innerHTML = `

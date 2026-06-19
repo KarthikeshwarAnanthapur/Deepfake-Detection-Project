@@ -1,7 +1,7 @@
 import tensorflow as tf
-from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
-from tensorflow.keras.models import Model
+from tensorflow.keras.applications import EfficientNetB0 # type: ignore
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout  # type: ignore
+from tensorflow.keras.models import Model  # type: ignore
 
 
 def build_encoder_model():
