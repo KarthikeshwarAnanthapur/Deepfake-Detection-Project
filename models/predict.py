@@ -93,17 +93,35 @@ def predict_image(img_path):
         result_text = f"REAL ({prediction:.4f})"
         status = "Real"
         confidence = prediction
-        reason = "The model found no evidence of face-swapping boundaries or manipulation artifacts. The lighting and textures appear completely natural."
+        reason = "The model detected facial characteristics consistent with authentic media and found no significant indicators of synthetic manipulation. Visual patterns observed in the image align with those commonly seen in genuine facial content."
+        indicators = [
+            "Natural facial texture",
+            "Consistent lighting patterns",
+            "Stable facial boundaries",
+            "No visible synthesis artifacts"
+        ]
     elif prediction < 0.4:
         result_text = f"FAKE ({1 - prediction:.4f})"
         status = "Fake"
         confidence = 1 - prediction
-        reason = "The model detected anomalies indicative of a face-swap, such as boundary blending issues, unnatural skin smoothing, or localized warping."
+        reason = "The model identified visual patterns commonly associated with manipulated or AI-generated facial content. Detected inconsistencies suggest the presence of synthetic generation or facial alteration artifacts."
+        indicators = [
+            "Facial boundary irregularities",
+            "Unnatural skin smoothing",
+            "Texture inconsistencies",
+            "Possible synthesis artifacts"
+        ]
     else:
         result_text = f"UNCERTAIN ({prediction:.4f})"
         status = "Uncertain"
         confidence = prediction
-        reason = "The model cannot confidently verify this image. It lacks strong manipulation artifacts, but may contain noise or low resolution preventing a clear authentic read."
+        reason = "The model returned a low-confidence prediction and could not reliably classify the image as real or fake. Additional verification may be required due to image quality limitations or features outside the model's training distribution."
+        indicators = [
+            "Low prediction confidence",
+            "Unseen image characteristics",
+            "Compression or quality issues",
+            "Further verification recommended"
+        ]
         
     print(result_text)
     
@@ -112,6 +130,7 @@ def predict_image(img_path):
         "confidence": confidence,
         "raw_score": prediction,
         "reason": reason,
+        "indicators": indicators,
         "model_used": "ViT DeepGuard"
     }
 

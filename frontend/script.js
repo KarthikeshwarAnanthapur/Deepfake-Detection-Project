@@ -5,7 +5,8 @@
  */
 
 // CONFIG
-const API_URL     = "http://localhost:8000/predict";
+const API_BASE    = "http://127.0.0.1:8000";
+const API_URL     = API_BASE + "/predict";
 const STORAGE_KEY = (name) => "dg_hist_" + name.trim().toLowerCase().replace(/\s+/g, "_");
 const MAX_HIST    = 60;
 
@@ -14,6 +15,7 @@ let currentUser    = null;
 let history_data   = [];
 let currentFile    = null;
 let currentDataURL = null;
+let originalDataURL = null;
 let cropper        = null;
 let sidebarOpen    = false;
 let toastTimer     = null;
@@ -72,6 +74,7 @@ const confPct     = document.getElementById("conf-pct");
 const confBar     = document.getElementById("conf-bar");
 const reasonBlock = document.getElementById("reason-block");
 const reasonText  = document.getElementById("result-reason");
+const indicatorsList = document.getElementById("result-indicators");
 const metaModel   = document.getElementById("meta-model");
 const metaDec     = document.getElementById("meta-decision");
 const againBtn    = document.getElementById("again-btn");
@@ -129,6 +132,7 @@ function doLogout() {
   loginPage.classList.remove("fade-out");
   usernameIn.value = "";
   closeSidebar();
+  lockAssistant();
   setTimeout(function() { usernameIn.focus(); }, 100);
 }
 
@@ -180,7 +184,7 @@ function closeSidebar() {
   sidebarOpen = false;
   if (window.innerWidth < 960) {
     sidebar.classList.remove("sb-open");
-    if (sbOverlay) sbOverlay.classList.add("hidden");
+    if (sbOverlay) sbOverlay.classList.remove("hidden");
   } else {
     sidebar.classList.add("sb-closed");
   }
@@ -402,6 +406,7 @@ function loadFile(file) {
   var reader  = new FileReader();
   reader.onload = function(ev) {
     currentDataURL = ev.target.result;
+    originalDataURL = ev.target.result;
     if (cropper) { cropper.destroy(); cropper = null; }
     previewImg.src = currentDataURL;
     dropZone.classList.add("hidden");
@@ -429,6 +434,7 @@ function loadFile(file) {
 function clearUpload() {
   currentFile = null;
   currentDataURL = null;
+  originalDataURL = null;
   if (cropper) { cropper.destroy(); cropper = null; }
   previewImg.src = "";
   previewWrap.classList.add("hidden");
@@ -442,6 +448,7 @@ function resetResult() {
   if (resultPh)   resultPh.classList.remove("hidden");
   if (resultBody) resultBody.classList.add("hidden");
   if (confBar)    { confBar.style.transition = "none"; confBar.style.width = "0%"; }
+  lockAssistant();
 }
 
 dropZone.addEventListener("dragover", function(e) { e.preventDefault(); dropZone.classList.add("dz-active"); });
@@ -454,9 +461,36 @@ dropZone.addEventListener("drop", function(e) {
   var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
   if (f) loadFile(f);
 });
-dropZone.addEventListener("click",   function() { fileInput.click(); });
-dropZone.addEventListener("keydown", function(e) { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
-fileInput.addEventListener("change", function() { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+dropZone.addEventListener("click", function(e) {
+  console.log("[DeepGuard] dropZone click event triggered. target:", e.target);
+  if (e.target === fileInput) {
+    console.log("[DeepGuard] Click was directly on fileInput. Handled by native behavior.");
+    return;
+  }
+  console.log("[DeepGuard] Click on dropZone wrapper element. Calling fileInput.click() manually.");
+  fileInput.click();
+});
+
+fileInput.addEventListener("click", function(e) {
+  console.log("[DeepGuard] fileInput click event triggered. Stopping propagation to parent.");
+  e.stopPropagation();
+});
+
+dropZone.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" || e.key === " ") {
+    console.log("[DeepGuard] Keydown trigger (Enter/Space) on dropZone. Simulating click.");
+    e.preventDefault(); // Prevent page scrolling on spacebar press
+    fileInput.click();
+  }
+});
+
+fileInput.addEventListener("change", function() {
+  console.log("[DeepGuard] fileInput change event triggered.");
+  if (fileInput.files[0]) {
+    console.log("[DeepGuard] Loading selected file:", fileInput.files[0].name);
+    loadFile(fileInput.files[0]);
+  }
+});
 clearImgBtn.addEventListener("click", clearUpload);
 
 // ─── DETECTION ────────────────────────────────────────────────────────────────
@@ -495,7 +529,7 @@ async function runDetection() {
     var isFetch = err.name === "TypeError" && err.message.indexOf("fetch") !== -1;
     showToast(
       isFetch
-        ? "Cannot reach API - please start the FastAPI server on port 8000."
+        ? "Cannot reach API - start FastAPI at " + API_BASE + " and reload this page."
         : err.message,
       "error", 5500
     );
@@ -533,6 +567,15 @@ function showResult(data) {
       reasonBlock.classList.remove("hidden");
       reasonBlock.className = "reason-block " + cls;
       reasonText.textContent = reason;
+      if (indicatorsList) {
+        indicatorsList.innerHTML = "";
+        var indList = data.indicators || [];
+        indList.forEach(function(ind) {
+          var li = document.createElement("li");
+          li.textContent = ind;
+          indicatorsList.appendChild(li);
+        });
+      }
     } else {
       reasonBlock.classList.add("hidden");
     }
@@ -564,6 +607,7 @@ function showResult(data) {
   if (resultPh)   resultPh.classList.add("hidden");
   if (resultBody) resultBody.classList.remove("hidden");
   showToast(prediction + " - " + pct + "% confidence", "success");
+  unlockAssistant();
 }
 
 // ─── HISTORY ──────────────────────────────────────────────────────────────────
@@ -600,6 +644,341 @@ function escHtml(str) {
     .replace(/"/g,  "&quot;");
 }
 
+// ─── KNOWLEDGE ASSISTANT ──────────────────────────────────────────────────────
+let faqDatabase = {
+  "what is deepfake": "A deepfake is AI-generated or manipulated media that alters a person's appearance, voice, or actions using deep learning techniques.",
+  "what is deepguard": "DeepGuard is a deepfake detection system that uses a Vision Transformer based model to classify facial images as Real or Fake.",
+  "what dataset was used": "The model was trained using the Celeb-DF v2 dataset containing real and deepfake celebrity videos.",
+  "what is celeb-df": "Celeb-DF v2 is a benchmark dataset designed for deepfake detection research. It contains both authentic and manipulated celebrity videos.",
+  "why use celeb-df": "Celeb-DF contains realistic deepfake videos and is widely used to evaluate deepfake detection models.",
+  "what is mtcnn": "MTCNN is a face detection algorithm used to locate and crop faces from video frames before training.",
+  "why face extraction": "Face extraction removes irrelevant background information and allows the model to focus on facial features.",
+  "what is preprocessing": "Preprocessing includes face detection, cropping, resizing, and preparing images for model training.",
+  "what image size is used": "Images are resized to 224x224 pixels before being fed into the model.",
+  "what is cnn": "CNN stands for Convolutional Network. It extracts local visual features such as edges, textures, and patterns.",
+  "what is vision transformer": "Vision Transformer or ViT is a deep learning architecture that analyzes images using transformer mechanisms originally developed for NLP.",
+  "why use vit": "ViT captures global relationships between different regions of an image, helping detect subtle manipulation artifacts.",
+  "what is patch embedding": "Patch embedding converts image patches into vector representations that can be processed by the transformer.",
+  "what are image patches": "Image patches are small sections of an image split before transformer processing.",
+  "what is positional embedding": "Positional embedding provides location information so the transformer understands where each patch belongs in the image.",
+  "what is transformer encoder": "The transformer encoder processes embedded image patches and learns relationships between them using attention mechanisms.",
+  "what is self attention": "Self-attention allows the model to determine which image regions are most important when making predictions.",
+  "what is multi head attention": "Multi-head attention enables the model to learn multiple relationships across image patches simultaneously.",
+  "what is ffn": "FFN stands for Feed Forward Network. It processes features generated by the attention layers inside the transformer encoder.",
+  "what is mlp head": "The MLP head is the final classification layer that predicts whether an image is Real or Fake.",
+  "what is feature extraction": "Feature extraction identifies important visual patterns used to distinguish authentic and manipulated images.",
+  "how does the model detect deepfakes": "The model learns visual patterns commonly associated with manipulated facial content and uses them for classification.",
+  "what is training": "Training is the process of teaching the model using labeled real and fake images.",
+  "what is validation": "Validation evaluates model performance during training and helps prevent overfitting.",
+  "what is testing": "Testing measures model performance on unseen data after training is completed.",
+  "what is accuracy": "Accuracy represents the percentage of correct predictions made by the model.",
+  "what is precision": "Precision measures how many images predicted as fake are actually fake.",
+  "what is recall": "Recall measures how many actual fake images were correctly identified by the model.",
+  "what is f1 score": "F1 Score is a balanced metric that combines precision and recall.",
+  "what is confusion matrix": "A confusion matrix summarizes correct and incorrect predictions across classes.",
+  "what does confidence score mean": "The confidence score indicates how certain the model is about its prediction.",
+  "why can predictions be wrong": "Predictions may be incorrect when images differ significantly from the training data or contain quality issues.",
+  "what is dataset bias": "Dataset bias occurs when the model learns patterns specific to the training dataset instead of general deepfake characteristics.",
+  "why does the model work best on celeb-df": "The model was trained on Celeb-DF images, so it performs best on data similar to that dataset.",
+  "what is an uncertain prediction": "An uncertain prediction occurs when the confidence score is too low for a reliable classification.",
+  "what are the limitations of the project": "The model may not generalize perfectly to unseen datasets or newly generated deepfakes.",
+  "what is future scope": "Future improvements include multi-dataset training, video-level detection, and real time deployment.",
+  "can the system detect videos": "The current implementation focuses on facial images extracted from videos rather than full video analysis.",
+  "what technologies were used": "The project uses Python, OpenCV, MTCNN, TensorFlow/Keras, Vision Transformers, FastAPI, HTML, CSS, and JavaScript."
+};
+
+async function loadFaqData() {
+  try {
+    const response = await fetch("faq.json");
+    if (response.ok) {
+      const fetched = await response.json();
+      faqDatabase = Object.assign({}, faqDatabase, fetched);
+    }
+  } catch (error) {
+    console.warn("Failed to load FAQ database via fetch (likely CORS/file://), using embedded database instead.");
+  }
+}
+
+function lockAssistant() {
+  const panel = document.getElementById("assistant-panel");
+  const lockedView = document.getElementById("assistant-locked-view");
+  const enabledView = document.getElementById("assistant-enabled-view");
+  const input = document.getElementById("assistant-input");
+  const btn = document.getElementById("assistant-send-btn");
+
+  if (panel) panel.classList.add("locked");
+  if (lockedView) lockedView.classList.remove("hidden");
+  if (enabledView) enabledView.classList.add("hidden");
+  if (input) {
+    input.disabled = true;
+    input.value = "";
+  }
+  if (btn) btn.disabled = true;
+  
+  const history = document.getElementById("assistant-chat-history");
+  if (history) history.innerHTML = "";
+}
+
+function unlockAssistant() {
+  const panel = document.getElementById("assistant-panel");
+  const lockedView = document.getElementById("assistant-locked-view");
+  const enabledView = document.getElementById("assistant-enabled-view");
+  const input = document.getElementById("assistant-input");
+  const btn = document.getElementById("assistant-send-btn");
+
+  if (panel) panel.classList.remove("locked");
+  if (lockedView) lockedView.classList.add("hidden");
+  if (enabledView) enabledView.classList.remove("hidden");
+  if (input) input.disabled = false;
+  if (btn) btn.disabled = false;
+  
+  const history = document.getElementById("assistant-chat-history");
+  if (history && history.children.length === 0) {
+    appendAssistantMessage("Hello! I am the DeepGuard Knowledge Assistant. Ask me any project-related question about Deepfake Detection, ViT, MTCNN, Celeb-DF, and more.");
+  }
+}
+
+function appendUserMessage(text) {
+  const history = document.getElementById("assistant-chat-history");
+  if (!history) return;
+  
+  const msg = document.createElement("div");
+  msg.className = "chat-msg user";
+  msg.textContent = text;
+  history.appendChild(msg);
+  
+  history.scrollTop = history.scrollHeight;
+}
+
+function appendAssistantMessage(text) {
+  const history = document.getElementById("assistant-chat-history");
+  if (!history) return;
+  
+  const msg = document.createElement("div");
+  msg.className = "chat-msg assistant";
+  msg.textContent = text;
+  history.appendChild(msg);
+  
+  history.scrollTop = history.scrollHeight;
+}
+
+function findFaqAnswer(query) {
+  if (!query) return null;
+  const cleanQuery = query.toLowerCase().trim().replace(/[?.,!]/g, "");
+  
+  // 1. Direct key match (exact match after normalization)
+  if (faqDatabase[cleanQuery]) {
+    return faqDatabase[cleanQuery];
+  }
+  
+  // 2. Tokenize and filter stopwords
+  const stopwords = new Set([
+    "what", "is", "why", "does", "the", "a", "an", "of", "for", "to", "about", 
+    "in", "on", "with", "how", "can", "are", "was", "were", "been", "do", "did", 
+    "tell", "me", "use", "used", "using", "work", "works", "best", "some", "any",
+    "project", "model", "system", "question", "answer", "asked", "ask"
+  ]);
+  
+  function getKeywords(str) {
+    return str.split(/\s+/)
+              .map(w => w.replace(/[^a-z0-9-]/g, ""))
+              .filter(w => w && !stopwords.has(w));
+  }
+  
+  const queryWords = getKeywords(cleanQuery);
+  if (queryWords.length === 0) return null;
+  
+  let bestMatchKey = null;
+  let highestScore = 0;
+  
+  for (const key in faqDatabase) {
+    const cleanKey = key.toLowerCase().trim().replace(/[?.,!]/g, "");
+    
+    // Substring match boost
+    if (cleanQuery.includes(cleanKey) || cleanKey.includes(cleanQuery)) {
+      const substringScore = 50 + cleanKey.length;
+      if (substringScore > highestScore) {
+        highestScore = substringScore;
+        bestMatchKey = key;
+      }
+    }
+    
+    // Word overlap match
+    const keyWords = getKeywords(cleanKey);
+    let overlapCount = 0;
+    
+    queryWords.forEach(qw => {
+      if (keyWords.includes(qw)) {
+        overlapCount++;
+      } else {
+        // partial match (e.g. "transformer" matches "transformers")
+        keyWords.forEach(kw => {
+          if (kw.includes(qw) || qw.includes(kw)) {
+            overlapCount += 0.8;
+          }
+        });
+      }
+    });
+    
+    if (overlapCount > 0) {
+      const overlapScore = (overlapCount * 15) + ((overlapCount / keyWords.length) * 10);
+      if (overlapScore > highestScore) {
+        highestScore = overlapScore;
+        bestMatchKey = key;
+      }
+    }
+  }
+  
+  // Keyword fallback mapping as a last resort
+  if (highestScore < 10) {
+    const keywordsMap = {
+      "vit": "what is vision transformer",
+      "vision transformer": "what is vision transformer",
+      "transformer encoder": "what is transformer encoder",
+      "celeb-df": "what is celeb-df",
+      "dataset": "what dataset was used",
+      "mtcnn": "what is mtcnn",
+      "face extraction": "why face extraction",
+      "preprocessing": "what is preprocessing",
+      "cnn": "what is cnn",
+      "accuracy": "what is accuracy",
+      "precision": "what is precision",
+      "recall": "what is recall",
+      "f1 score": "what is f1 score",
+      "confusion matrix": "what is confusion matrix",
+      "confidence score": "what does confidence score mean",
+      "uncertain": "what is an uncertain prediction",
+      "bias": "what is dataset bias",
+      "future": "what is future scope",
+      "video": "can the system detect videos",
+      "technologies": "what technologies were used",
+      "mlp head": "what is mlp head",
+      "ffn": "what is ffn",
+      "attention": "what is self attention"
+    };
+    
+    for (const kw in keywordsMap) {
+      if (cleanQuery.includes(kw)) {
+        const matchKey = keywordsMap[kw];
+        if (faqDatabase[matchKey]) {
+          return faqDatabase[matchKey];
+        }
+      }
+    }
+  }
+  
+  if (bestMatchKey && highestScore >= 10) {
+    return faqDatabase[bestMatchKey];
+  }
+  
+  return null;
+}
+
+function handleAssistantSubmit() {
+  const input = document.getElementById("assistant-input");
+  if (!input) return;
+  
+  const text = input.value.trim();
+  if (!text) return;
+  
+  appendUserMessage(text);
+  input.value = "";
+  
+  setTimeout(function() {
+    const answer = findFaqAnswer(text);
+    if (answer) {
+      appendAssistantMessage(answer);
+    } else {
+      appendAssistantMessage("I couldn't find an exact answer. Try asking about Vision Transformer, Celeb-DF, MTCNN, Deepfake Detection, Confidence Score, CNN, FFN, MLP Head, Transformer Encoder, or Model Evaluation.");
+    }
+  }, 250);
+}
+
+function initAssistant() {
+  loadFaqData();
+  
+  const sendBtn = document.getElementById("assistant-send-btn");
+  const input = document.getElementById("assistant-input");
+  
+  if (sendBtn) {
+    sendBtn.addEventListener("click", handleAssistantSubmit);
+  }
+  
+  if (input) {
+    input.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        handleAssistantSubmit();
+      }
+    });
+  }
+  
+  const panel = document.getElementById("assistant-panel");
+  if (panel) {
+    panel.addEventListener("click", function(e) {
+      if (e.target && e.target.classList.contains("chip")) {
+        const q = e.target.getAttribute("data-question");
+        if (q && input && !input.disabled) {
+          input.value = q;
+          handleAssistantSubmit();
+        }
+      }
+    });
+  }
+}
+
+function initImageModal() {
+  const container = document.getElementById("preview-img-container");
+  const modal = document.getElementById("image-modal");
+  const modalImg = document.getElementById("modal-img");
+  const modalClose = document.getElementById("modal-close");
+
+  if (!container || !modal || !modalImg) return;
+
+  let startX = 0;
+  let startY = 0;
+
+  container.addEventListener("mousedown", function(e) {
+    startX = e.screenX;
+    startY = e.screenY;
+  });
+
+  container.addEventListener("mouseup", function(e) {
+    const diffX = Math.abs(e.screenX - startX);
+    const diffY = Math.abs(e.screenY - startY);
+    
+    // If movement is very small, treat it as a click to open modal
+    if (diffX < 6 && diffY < 6) {
+      if (originalDataURL) {
+        modalImg.src = originalDataURL;
+        modal.classList.remove("hidden");
+      }
+    }
+  });
+
+  if (modalClose) {
+    modalClose.addEventListener("click", function() {
+      modal.classList.add("hidden");
+      modalImg.src = "";
+    });
+  }
+
+  modal.addEventListener("click", function(e) {
+    if (e.target === modal || e.target === modalClose) {
+      modal.classList.add("hidden");
+      modalImg.src = "";
+    }
+  });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+      modal.classList.add("hidden");
+      modalImg.src = "";
+    }
+  });
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 setTimeout(function() { if (usernameIn) usernameIn.focus(); }, 100);
+initAssistant();
+initImageModal();
 console.log("[DeepGuard] Ready. API:", API_URL);

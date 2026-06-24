@@ -139,10 +139,46 @@
               <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" class="hidden-file" />
             </div>
             <div id="preview-wrap" class="preview-wrap hidden">
-              <img id="preview-img" src="" alt="Preview" class="preview-img" />
-              <button id="clear-img-btn" class="btn-remove">✕ Remove</button>
+              <div class="preview-img-container" id="preview-img-container">
+                <img id="preview-img" src="" alt="Preview" class="preview-img" />
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: center; width: 100%;">
+                <button id="clear-img-btn" class="btn-remove">✕ Remove</button>
+              </div>
             </div>
             <div id="file-info" class="file-info hidden"></div>
+
+            <!-- DeepGuard Knowledge Assistant Panel -->
+            <div id="assistant-panel" class="assistant-panel locked">
+              <!-- Locked State View -->
+              <div id="assistant-locked-view" class="assistant-locked-view">
+                <div class="assistant-locked-title">🔒 Assistant Locked</div>
+                <p class="assistant-locked-text">Run a detection to unlock DeepGuard Knowledge Assistant.</p>
+              </div>
+              
+              <!-- Enabled State View -->
+              <div id="assistant-enabled-view" class="assistant-enabled-view hidden">
+                <div class="assistant-enabled-title">💬 DeepGuard Knowledge Assistant</div>
+                
+                <div class="assistant-suggested">
+                  <div class="suggested-title">Suggested Questions:</div>
+                  <div class="suggested-chips">
+                    <span class="chip" data-question="What is a Deepfake?">What is a Deepfake?</span>
+                    <span class="chip" data-question="Why Vision Transformer?">Why Vision Transformer?</span>
+                    <span class="chip" data-question="What is Celeb-DF?">What is Celeb-DF?</span>
+                    <span class="chip" data-question="What is MTCNN?">What is MTCNN?</span>
+                    <span class="chip" data-question="What does confidence score mean?">What does confidence score mean?</span>
+                  </div>
+                </div>
+
+                <div id="assistant-chat-history" class="assistant-chat-history"></div>
+
+                <div class="assistant-input-row">
+                  <input type="text" id="assistant-input" placeholder="Ask about Deepfake Detection, ViT, MTCNN, Celeb-DF, Confidence Scores..." disabled />
+                  <button id="assistant-send-btn" disabled>Send</button>
+                </div>
+              </div>
+            </div>
             <button id="detect-btn" class="btn-detect" disabled>
               <span class="detect-text">🔍 Detect</span>
               <span class="detect-spinner hidden"></span>
@@ -162,6 +198,10 @@
               <div id="reason-block" class="reason-block hidden">
                 <div class="reason-hd">Explanation</div>
                 <div id="result-reason" class="reason-text"></div>
+                <div class="indicators-section">
+                  <div class="reason-hd" style="margin-top: 14px; margin-bottom: 8px;">Key Indicators</div>
+                  <ul id="result-indicators" class="indicators-list"></ul>
+                </div>
               </div>
               <div class="conf-section">
                 <div class="conf-row">
@@ -226,6 +266,12 @@
 
     </div><!-- end content-area -->
   </div><!-- end app -->
+
+  <!-- Modal for viewing full image -->
+  <div id="image-modal" class="image-modal hidden">
+    <span class="modal-close" id="modal-close">&times;</span>
+    <img class="modal-content" id="modal-img">
+  </div>
 
   <!-- Toast -->
   <div id="toast" class="toast" role="alert"></div>
