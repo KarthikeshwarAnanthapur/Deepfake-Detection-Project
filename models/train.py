@@ -16,7 +16,7 @@ val_dir = "../dataset_split/val"
 test_dir = "../dataset_split/test"
 
 
-# =========================
+# ========================
 # MODEL PATHS
 # =========================
 FINAL_MODEL_PATH = "vit_final_model.h5"
