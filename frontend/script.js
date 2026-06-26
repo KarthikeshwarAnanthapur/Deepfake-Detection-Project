@@ -106,7 +106,7 @@ function doLogin() {
     usernameIn.focus();
     return;
   }
-  currentUser  = name;
+  currentUser  = name; localStorage.setItem("deepguard_user", name);
   history_data = loadHistory(name);
   userAvatar.textContent = name.charAt(0).toUpperCase();
   userLabel.textContent  = name;
@@ -124,7 +124,7 @@ function doLogin() {
 }
 
 function doLogout() {
-  currentUser  = null;
+  currentUser  = null; localStorage.removeItem("deepguard_user");
   history_data = [];
   clearUpload();
   appEl.classList.add("hidden");
@@ -978,7 +978,7 @@ function initImageModal() {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-setTimeout(function() { if (usernameIn) usernameIn.focus(); }, 100);
+var savedUser = localStorage.getItem("deepguard_user"); if (savedUser) { usernameIn.value = savedUser; doLogin(); } else { setTimeout(function() { if (usernameIn) usernameIn.focus(); }, 100); }
 initAssistant();
 initImageModal();
 console.log("[DeepGuard] Ready. API:", API_URL);
