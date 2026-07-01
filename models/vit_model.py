@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import layers, Model
+from tensorflow.keras import layers, Model #type:ignore
 
 
 def build_vit_model(input_shape=(224, 224, 3), patch_size=16, num_patches=196, projection_dim=64):

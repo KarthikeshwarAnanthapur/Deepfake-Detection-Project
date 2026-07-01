@@ -24,12 +24,19 @@ async def health():
     return {"status": "ok"}
 
 @app.post("/predict")
-async def predict(file: UploadFile):
+async def predict(file: UploadFile, model_type: str = "ensemble"):
     file_path = f"temp_{file.filename}"
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    result = predict_image(file_path)
+    result = predict_image(file_path, model_type=model_type)
+
+    # Clean up temp file
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
 
     return result

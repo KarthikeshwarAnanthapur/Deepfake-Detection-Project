@@ -3,8 +3,8 @@ import numpy as np
 import cv2
 import os
 
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from tensorflow.keras.preprocessing.image import ImageDataGenerator #type:ignore
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint #type:ignore
 from vit_model import build_vit_model
 
 
@@ -16,7 +16,7 @@ val_dir = "../dataset_split/val"
 test_dir = "../dataset_split/test"
 
 
-# ========================
+# =========================
 # MODEL PATHS
 # =========================
 FINAL_MODEL_PATH = "vit_final_model.h5"

@@ -362,7 +362,10 @@ function renderActivityTable(data) {
           <span style="color:var(--text-primary);font-weight:600;">${e.confidence}%</span>
         </div>
       </td>
-      <td><span style="color:var(--text-muted);">${e.model || 'ViT'}</span></td>
+      <td>
+        <span style="color:var(--text-muted);">${e.model || 'ViT'}</span>
+        ${e.vit_prediction ? `<br><span style="color:var(--accent-blue);font-size:0.7rem;font-weight:500;">ViT: ${e.vit_prediction} (${e.vit_confidence}%)</span>` : ''}
+      </td>
       <td style="color:var(--text-muted);font-size:0.75rem;">${e.timestamp || '—'}</td>
     `;
     tbody.appendChild(tr);

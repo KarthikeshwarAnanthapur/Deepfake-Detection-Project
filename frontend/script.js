@@ -8,7 +8,7 @@
 const API_BASE    = 'http://127.0.0.1:8000';
 const API_URL     = API_BASE + '/predict';
 const HEALTH_URL  = API_BASE + '/health';
-const MAX_HIST    = 60;
+const MAX_HIST    = 500;
 const STORAGE_KEY = (name) => 'dg_hist_' + name.trim().toLowerCase().replace(/\s+/g, '_');
 const USER_KEY    = 'dg_current_user';
 const THEME_KEY   = 'dg_theme';
@@ -272,7 +272,22 @@ function saveHistory(name, data) {
   try {
     localStorage.setItem(STORAGE_KEY(name), JSON.stringify(data.slice(0, MAX_HIST)));
   } catch (e) {
-    console.warn('[DeepGuard] localStorage save failed:', e);
+    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      console.warn('[DeepGuard] LocalStorage full. Stripping image previews from older entries...');
+      const cleanerData = data.map((entry, idx) => {
+        if (idx > 50 && entry.dataURL) {
+          return Object.assign({}, entry, { dataURL: null });
+        }
+        return entry;
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY(name), JSON.stringify(cleanerData.slice(0, MAX_HIST)));
+      } catch (retryErr) {
+        console.error('[DeepGuard] LocalStorage save failed after stripping images:', retryErr);
+      }
+    } else {
+      console.warn('[DeepGuard] localStorage save failed:', e);
+    }
   }
 }
 
@@ -673,7 +688,9 @@ function addToHistory(data) {
     model:      data.model_used || 'ViT',
     reason:     data.reason || '',
     indicators: data.indicators || [],
-    timestamp:  new Date().toLocaleString()
+    timestamp:  new Date().toLocaleString(),
+    vit_prediction: data.vit_prediction || null,
+    vit_confidence: data.vit_confidence ? Math.round(data.vit_confidence * 100) : null
   };
   history_data.unshift(entry);
   if (currentUser) saveHistory(currentUser, history_data);

@@ -50,7 +50,23 @@ function dgGetHistory(userName) {
 
 function dgSaveHistory(userName, data) {
   const key = 'dg_hist_' + userName.trim().toLowerCase().replace(/\s+/g, '_');
-  try { localStorage.setItem(key, JSON.stringify(data.slice(0, 60))); } catch(e) {}
+  const MAX_HIST = 500;
+  try {
+    localStorage.setItem(key, JSON.stringify(data.slice(0, MAX_HIST)));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      console.warn('[DeepGuard] LocalStorage full in shared. Stripping old image previews...');
+      const cleanerData = data.map((entry, idx) => {
+        if (idx > 50 && entry.dataURL) {
+          return Object.assign({}, entry, { dataURL: null });
+        }
+        return entry;
+      });
+      try {
+        localStorage.setItem(key, JSON.stringify(cleanerData.slice(0, MAX_HIST)));
+      } catch (retryErr) {}
+    }
+  }
 }
 
 /* ── Sidebar ────────────────────────────────────────────────── */

@@ -97,6 +97,21 @@
     </main>
   </div>
 
+  <!-- Report Preview Modal -->
+  <div class="report-modal hidden" id="report-modal">
+    <div class="report-modal-inner">
+      <button class="report-modal-close" id="report-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="report-modal-title"><i class="fa-solid fa-file-lines"
+          style="margin-right:6px;color:var(--accent-purple);"></i>Detection Report</div>
+      <div id="report-modal-content"></div>
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button class="btn btn-primary btn-sm" id="modal-download-btn" style="flex:1;"><i
+            class="fa-solid fa-download"></i> Download Report</button>
+        <button class="btn btn-ghost btn-sm" id="report-modal-close2"><i class="fa-solid fa-xmark"></i> Close</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="alert"></div>
   <script src="shared.js"></script>
   <script src="history.js"></script>

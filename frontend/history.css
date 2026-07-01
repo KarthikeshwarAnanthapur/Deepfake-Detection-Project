@@ -303,3 +303,89 @@
 @media (max-width: 380px) {
   .hist-grid { grid-template-columns: 1fr; }
 }
+
+/* Modal overlay for report preview */
+.report-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.report-modal.hidden {
+  display: none;
+}
+
+.report-modal-inner {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 540px;
+  padding: 28px;
+  position: relative;
+}
+
+.report-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.report-modal-close:hover {
+  color: var(--text-primary);
+}
+
+.report-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.report-field {
+  margin-bottom: 12px;
+}
+
+.report-field-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.report-field-val {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.conf-bar-wrap {
+  background: var(--bg-card);
+  border-radius: var(--radius-full);
+  height: 6px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.conf-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+}
+.conf-bar-fill.real { background: var(--grad-real); }
+.conf-bar-fill.fake { background: var(--grad-fake); }
+.conf-bar-fill.uncertain { background: var(--grad-uncertain); }
