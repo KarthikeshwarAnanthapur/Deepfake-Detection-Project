@@ -1,69 +1,140 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="DeepGuard — AI-powered deepfake detection using Vision Transformer." />
-  <title>DeepGuard — Deepfake Detection</title>
+  <meta name="description" content="DeepGuard v2.0 — AI-powered deepfake detection using Vision Transformer. Detect manipulated images instantly with professional-grade AI." />
+  <title>DeepGuard v2.0 — AI Deepfake Detection</title>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Cropper.js -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{width:100%;min-height:100%;font-family:'Inter',system-ui,sans-serif}
-  </style>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Dashboard-specific overrides */
+    .upload-card-body { padding: 16px 20px 20px; }
+
+    .scan-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+    }
+
+    .face-detect-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .face-box {
+      width: 80px; height: 80px;
+      border: 2px solid var(--accent-blue);
+      border-radius: 4px;
+      box-shadow: 0 0 20px rgba(6,182,212,0.5);
+      animation: face-box-pulse 1.5s ease-in-out infinite;
+      display: none;
+    }
+
+    @keyframes face-box-pulse {
+      0%,100% { box-shadow: 0 0 20px rgba(6,182,212,0.5); }
+      50%      { box-shadow: 0 0 40px rgba(6,182,212,0.8); }
+    }
+
+    .scan-loading .face-box { display: block; }
+    .scan-loading .scan-line { display: block; }
+
+    /* System health bar */
+    .health-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .health-row:last-child { border-bottom: none; }
+    .health-label { font-size: 0.8rem; color: var(--text-muted); }
+    .health-val   { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+    .health-dot   { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .health-dot.online  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .health-dot.offline { background: var(--red); }
+  </style>
 </head>
 <body>
 
-  <!-- Background orbs -->
-  <div class="bg-orbs" aria-hidden="true">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
+  <!-- Animated background -->
+  <div class="bg-canvas" aria-hidden="true"></div>
+  <div class="bg-orb-3"  aria-hidden="true"></div>
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
 
-  <!-- ══════════════════════════════
+  <!-- ══════════════════════════════════════════════
        LOGIN PAGE
-  ══════════════════════════════ -->
+  ══════════════════════════════════════════════ -->
   <div id="login-page" class="login-page">
     <div class="login-card">
+      <!-- Logo -->
       <div class="login-logo">
-        <div class="login-logo-icon">🛡️</div>
+        <div class="login-logo-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
         <div>
           <div class="login-logo-text">Deep<span class="grad-text">Guard</span></div>
-          <div class="login-logo-sub">Powered by Vision Transformer (ViT)</div>
+          <div class="login-logo-sub">Powered by Vision Transformer · v2.0</div>
         </div>
       </div>
+
       <h1 class="login-heading">Welcome Back</h1>
-      <p class="login-subheading"></p>
+      <p class="login-subheading">Enter your name to access the AI deepfake detection platform.</p>
+
+      <!-- Name Field -->
       <div class="login-field">
         <label class="login-label" for="username-input">Your Name</label>
         <div class="login-input-wrap">
-          <span class="login-input-icon">👤</span>
-          <input id="username-input" type="text" class="login-input"
-            placeholder="e.g. Alex, Priya, Jordan..."
-            maxlength="32" autocomplete="off" spellcheck="false" />
+          <span class="login-input-icon"><i class="fa-solid fa-user"></i></span>
+          <input
+            id="username-input"
+            type="text"
+            class="login-input"
+            placeholder="e.g. Alex, Priya, Jordan…"
+            maxlength="32"
+            autocomplete="off"
+            spellcheck="false"
+          />
         </div>
-        <p class="login-hint"></p>
       </div>
-      <button id="login-btn" class="login-btn">
-        <span class="login-btn-text">Enter DeepDetection</span>
-        <span class="login-btn-arrow">→</span>
+
+      <!-- Login Button -->
+      <button id="login-btn" class="login-btn" id="login-submit-btn">
+        <span class="login-btn-text">Enter DeepGuard</span>
+        <span class="login-btn-arrow"><i class="fa-solid fa-arrow-right"></i></span>
       </button>
+
+      <!-- Feature Pills -->
       <div class="login-features">
-        <div class="login-feat"><span>⚡</span><span>Instant Detection</span></div>
-        
+        <span class="login-feat"><i class="fa-solid fa-bolt"></i> Instant Detection</span>
+        <span class="login-feat"><i class="fa-solid fa-eye"></i> Vision Transformer</span>
+        <span class="login-feat"><i class="fa-solid fa-shield-halved"></i> MTCNN Face AI</span>
+        <span class="login-feat"><i class="fa-solid fa-lock"></i> Private & Secure</span>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════
+  <!-- ══════════════════════════════════════════════
        APP SHELL
-  ══════════════════════════════ -->
-  <div id="app" class="app hidden">
+  ══════════════════════════════════════════════ -->
+  <div id="app" class="hidden">
 
     <!-- HEADER -->
     <header class="header">
@@ -71,211 +142,337 @@
         <button id="sidebar-toggle" class="hamburger" aria-label="Toggle sidebar">
           <span></span><span></span><span></span>
         </button>
-        <div class="logo">
-          <span class="logo-icon">🛡️</span>
+        <a href="index.html" class="logo">
+          <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#fff;font-size:0.9rem;"></i></div>
           <span class="logo-text">Deep<span class="grad-text">Guard</span></span>
-        </div>
-        <span class="header-badge">ViT Model</span>
+        </a>
+        <span class="logo-tag">ViT · v2.0</span>
       </div>
       <div class="header-right">
+        <div id="ai-status-pill" class="ai-status-pill">
+          <span class="status-dot"></span>
+          <span id="ai-status-label">AI Online</span>
+        </div>
+        <button class="theme-toggle" id="theme-toggle-btn" title="Toggle theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
         <div class="user-pill">
           <div class="user-avatar" id="user-avatar">A</div>
-          <span id="user-name-label">User</span>
+          <span class="user-name" id="user-name-label">User</span>
         </div>
-        <button id="logout-btn" class="btn-logout">↩ Logout</button>
+        <button id="logout-btn" class="btn-logout">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
       </div>
     </header>
 
-    <!-- LAYOUT -->
-    <div class="content-area">
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sb-overlay hidden" id="sb-overlay"></div>
 
-      <!-- ── SIDEBAR ── -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-inner">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
 
-        
+        <div class="sb-section-label">Main</div>
 
-          <!-- DASHBOARD NAV -->
-          <button class="sb-nav-btn active" id="tab-dashboard">
-            <span class="sb-nav-icon">📊</span>
-            <span class="sb-nav-label">Dashboard</span>
-            <span class="sb-nav-arrow" id="arrow-dashboard">▾</span>
-          </button>
+        <a href="index.html" class="sb-nav-btn active" id="nav-dashboard">
+          <span class="sb-nav-icon"><i class="fa-solid fa-house"></i></span>
+          <span class="sb-nav-label">Dashboard</span>
+        </a>
 
-          
+        <a href="history.html" class="sb-nav-btn" id="nav-history">
+          <span class="sb-nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <span class="sb-nav-label">History</span>
+        </a>
 
-          <!-- HISTORY NAV — opens full page -->
-          <button class="sb-nav-btn" id="tab-history">
-            <span class="sb-nav-icon">📋</span>
-            <span class="sb-nav-label">History</span>
-            <span class="sb-nav-arrow">→</span>
-          </button>
+        <a href="analytics.html" class="sb-nav-btn" id="nav-analytics">
+          <span class="sb-nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+          <span class="sb-nav-label">Analytics</span>
+        </a>
 
+        <a href="assistant.html" class="sb-nav-btn" id="nav-assistant">
+          <span class="sb-nav-icon"><i class="fa-solid fa-robot"></i></span>
+          <span class="sb-nav-label">AI Assistant</span>
+        </a>
+
+        <div class="sb-divider"></div>
+        <div class="sb-section-label">Resources</div>
+
+        <a href="reports.html" class="sb-nav-btn" id="nav-reports">
+          <span class="sb-nav-icon"><i class="fa-solid fa-file-lines"></i></span>
+          <span class="sb-nav-label">Reports</span>
+        </a>
+
+        <a href="learn.html" class="sb-nav-btn" id="nav-learn">
+          <span class="sb-nav-icon"><i class="fa-solid fa-book-open"></i></span>
+          <span class="sb-nav-label">Learn</span>
+        </a>
+
+        <div class="sb-divider"></div>
+        <div class="sb-section-label">System</div>
+
+        <a href="settings.html" class="sb-nav-btn" id="nav-settings">
+          <span class="sb-nav-icon"><i class="fa-solid fa-gear"></i></span>
+          <span class="sb-nav-label">Settings</span>
+        </a>
+
+        <a href="about.html" class="sb-nav-btn" id="nav-about">
+          <span class="sb-nav-icon"><i class="fa-solid fa-circle-info"></i></span>
+          <span class="sb-nav-label">About</span>
+        </a>
+
+      </div>
+
+      <!-- Collapse button -->
+      <button class="sb-collapse-btn" id="sidebar-collapse-btn">
+        <i class="fa-solid fa-chevron-left collapse-icon"></i>
+        <span class="collapse-label">Collapse</span>
+      </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-layout">
+      <main class="main-content" id="main-content">
+
+        <!-- Hero Section -->
+        <section class="hero-section fade-up">
+          <div class="hero-eyebrow">
+            <div class="ai-status-pill" id="model-status-pill">
+              <span class="status-dot"></span>
+              <span>ViT Model Ready</span>
+            </div>
+          </div>
+          <h1 class="hero-title">
+            Detect <span class="grad-text">Deepfakes</span><br/>Instantly with AI
+          </h1>
+          <p class="hero-sub">
+            Upload any face image — our Vision Transformer model analyzes it for manipulation artifacts and tells you if it's <strong>Real</strong> or <strong>Fake</strong> in seconds.
+          </p>
+        </section>
+
+        <!-- Stats Row -->
+        <div class="stats-grid fade-up animate-delay-1" id="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fa-solid fa-images"></i></div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Scans</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-value" id="stat-real">0</div>
+            <div class="stat-label">Real Images</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-value" id="stat-fake">0</div>
+            <div class="stat-label">Fakes Detected</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-percent"></i></div>
+            <div class="stat-value" id="stat-avg-conf">—</div>
+            <div class="stat-label">Avg Confidence</div>
+          </div>
         </div>
-      </aside>
 
-      <!-- Mobile sidebar overlay -->
-      <div class="sb-overlay hidden" id="sb-overlay"></div>
-
-      <!-- ── MAIN DETECT PAGE ── -->
-      <main class="main" id="main-detect">
-
-        <div class="hero">
-          <h2 class="hero-title">Detect <span class="grad-text">Deepfakes</span><br>Instantly</h2>
-          <p class="hero-sub">Upload a face image — our AI will tell you if it's <strong>Real</strong> or <strong>Fake</strong> in seconds</p>
-        </div>
-
-        <div class="cards-row">
+        <!-- Detect Grid -->
+        <div class="detect-grid fade-up animate-delay-2">
 
           <!-- Upload Card -->
           <div class="card">
             <div class="card-header">
-              <span class="card-icon">📤</span>
-              <h3 class="card-title">Upload Image</h3>
+              <div class="card-icon"><i class="fa-solid fa-upload"></i></div>
+              <h2 class="card-title">Upload Image</h2>
             </div>
-            <div id="drop-zone" class="drop-zone" role="button" tabindex="0">
-              <div class="dz-icon">📁</div>
-              <div class="dz-text">Drag &amp; drop a face image<br><span class="dz-sub">or click to browse</span></div>
-              <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" class="hidden-file" />
-            </div>
-            <div id="preview-wrap" class="preview-wrap hidden">
-              <div class="preview-img-container" id="preview-img-container">
-                <img id="preview-img" src="" alt="Preview" class="preview-img" />
-              </div>
-              <div style="display: flex; gap: 8px; justify-content: center; width: 100%;">
-                <button id="clear-img-btn" class="btn-remove">✕ Remove</button>
-              </div>
-            </div>
-            <div id="file-info" class="file-info hidden"></div>
+            <div class="upload-card-body">
 
-            <!-- DeepGuard Knowledge Assistant Panel -->
-            <div id="assistant-panel" class="assistant-panel locked">
-              <!-- Locked State View -->
-              <div id="assistant-locked-view" class="assistant-locked-view">
-                <div class="assistant-locked-title">🔒 Assistant Locked</div>
-                <p class="assistant-locked-text">Run a detection to unlock DeepGuard Knowledge Assistant.</p>
+              <!-- Drop Zone -->
+              <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Upload image">
+                <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up" style="font-size:2.2rem;color:var(--accent-purple);opacity:0.7;"></i></div>
+                <div class="dz-title">Drag &amp; drop a face image</div>
+                <div class="dz-sub">or click to browse · JPEG, PNG, WebP · max 20MB</div>
+                <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" class="hidden-file" aria-hidden="true" />
               </div>
-              
-              <!-- Enabled State View -->
-              <div id="assistant-enabled-view" class="assistant-enabled-view hidden">
-                <div class="assistant-enabled-title">💬 DeepGuard Knowledge Assistant</div>
-                
-                <div class="assistant-suggested">
-                  <div class="suggested-title">Suggested Questions:</div>
-                  <div class="suggested-chips">
-                    <span class="chip" data-question="What is a Deepfake?">What is a Deepfake?</span>
-                    <span class="chip" data-question="Why Vision Transformer?">Why Vision Transformer?</span>
-                    <span class="chip" data-question="What is Celeb-DF?">What is Celeb-DF?</span>
-                    <span class="chip" data-question="What is MTCNN?">What is MTCNN?</span>
-                    <span class="chip" data-question="What does confidence score mean?">What does confidence score mean?</span>
+
+              <!-- Image Preview -->
+              <div id="preview-wrap" class="preview-wrap hidden">
+                <div class="scan-container" id="preview-img-container">
+                  <img id="preview-img" src="" alt="Preview" class="preview-img" />
+                  <!-- Scan overlay (visible during detection) -->
+                  <div class="face-detect-overlay" id="face-overlay">
+                    <div class="face-box" id="face-box"></div>
+                    <div class="scan-line hidden" id="scan-line"></div>
                   </div>
                 </div>
-
-                <div id="assistant-chat-history" class="assistant-chat-history"></div>
-
-                <div class="assistant-input-row">
-                  <input type="text" id="assistant-input" placeholder="Ask about Deepfake Detection, ViT, MTCNN, Celeb-DF, Confidence Scores..." disabled />
-                  <button id="assistant-send-btn" disabled>Send</button>
+                <div class="preview-actions">
+                  <button id="clear-img-btn" class="btn-remove">
+                    <i class="fa-solid fa-xmark"></i> Remove
+                  </button>
+                  <div id="file-info" class="file-info-row" style="flex:1;border:none;padding:0;background:none;"></div>
                 </div>
               </div>
+
+              <!-- AI Assistant panel (embedded) -->
+              <div id="assistant-panel" class="assistant-panel">
+                <div id="assistant-locked-view" class="assistant-locked-view">
+                  <div class="assistant-locked-icon"><i class="fa-solid fa-lock"></i></div>
+                  <div class="assistant-locked-title">Assistant Locked</div>
+                  <p class="assistant-locked-text">Run a detection to unlock the DeepGuard AI Assistant.</p>
+                </div>
+                <div id="assistant-enabled-view" class="hidden">
+                  <div class="assistant-enabled-title">
+                    <i class="fa-solid fa-robot"></i> DeepGuard AI Assistant
+                  </div>
+                  <div class="suggested-chips" id="suggested-chips">
+                    <span class="chip" data-question="What is a Deepfake?">What is a Deepfake?</span>
+                    <span class="chip" data-question="Why Vision Transformer?">Why ViT?</span>
+                    <span class="chip" data-question="What is Celeb-DF?">Celeb-DF</span>
+                    <span class="chip" data-question="What is MTCNN?">MTCNN</span>
+                    <span class="chip" data-question="What does confidence score mean?">Confidence Score</span>
+                  </div>
+                  <div id="assistant-chat-history" class="assistant-chat-history"></div>
+                  <div class="assistant-input-row">
+                    <input type="text" id="assistant-input" placeholder="Ask about deepfake detection, ViT, MTCNN…" disabled />
+                    <button id="assistant-send-btn" disabled><i class="fa-solid fa-paper-plane"></i></button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Detect Button -->
+              <button id="detect-btn" class="btn-detect" disabled>
+                <span class="detect-text"><i class="fa-solid fa-magnifying-glass"></i> Analyze Image</span>
+                <span class="detect-spinner hidden"><span class="spinner"></span> Analyzing…</span>
+              </button>
             </div>
-            <button id="detect-btn" class="btn-detect" disabled>
-              <span class="detect-text">🔍 Detect</span>
-              <span class="detect-spinner hidden"></span>
-            </button>
           </div>
 
           <!-- Result Card -->
-          <div class="card result-card" id="result-card">
-            <div id="result-placeholder" class="result-ph">
-              <div class="result-ph-icon">🔮</div>
-              <p>Results appear here after detection</p>
+          <div class="card" id="result-card">
+            <div class="card-header">
+              <div class="card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+              <h2 class="card-title">Detection Result</h2>
             </div>
-            <div id="result-body" class="result-body hidden">
-              <div id="result-badge" class="result-badge"></div>
-              <h3 id="result-label" class="result-label"></h3>
-              <p id="result-desc" class="result-desc"></p>
-              <div id="reason-block" class="reason-block hidden">
-                <div class="reason-hd">Explanation</div>
-                <div id="result-reason" class="reason-text"></div>
-                <div class="indicators-section">
-                  <div class="reason-hd" style="margin-top: 14px; margin-bottom: 8px;">Key Indicators</div>
-                  <ul id="result-indicators" class="indicators-list"></ul>
+            <div class="card-body">
+              <!-- Placeholder -->
+              <div id="result-placeholder" class="result-ph">
+                <div class="result-ph-icon"><i class="fa-solid fa-crystal-ball" style="font-size:3rem;opacity:0.3;"></i></div>
+                <p>Results appear here after detection</p>
+                <p class="text-xs" style="margin-top:4px;color:var(--text-dim);">Upload an image and click Analyze</p>
+              </div>
+
+              <!-- Result Body -->
+              <div id="result-body" class="hidden">
+                <div id="result-badge" class="result-badge"></div>
+                <h3 id="result-label" class="result-label"></h3>
+                <p id="result-desc" class="result-desc"></p>
+
+                <!-- Confidence Gauge -->
+                <div class="conf-section">
+                  <div class="conf-row">
+                    <span class="conf-title"><i class="fa-solid fa-gauge-high" style="margin-right:5px;"></i>Confidence</span>
+                    <span id="conf-pct" class="conf-pct"></span>
+                  </div>
+                  <div class="conf-track">
+                    <div id="conf-bar" class="conf-bar"></div>
+                  </div>
+                </div>
+
+                <!-- Explanation -->
+                <div id="reason-block" class="reason-block hidden">
+                  <div class="reason-hd"><i class="fa-solid fa-magnifying-glass-chart" style="margin-right:4px;"></i>AI Explanation</div>
+                  <div id="result-reason" class="reason-text"></div>
+                  <div class="indicators-section" id="indicators-section" style="display:none;">
+                    <div class="reason-hd" style="margin-top:12px;margin-bottom:6px;"><i class="fa-solid fa-list-check" style="margin-right:4px;"></i>Key Indicators</div>
+                    <ul id="result-indicators" class="indicators-list"></ul>
+                  </div>
+                </div>
+
+                <!-- Meta Row -->
+                <div class="meta-row">
+                  <div class="meta-item">
+                    <span class="meta-lbl">Model</span>
+                    <span id="meta-model" class="meta-val">—</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-lbl">Decision</span>
+                    <span id="meta-decision" class="meta-val">—</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-lbl">Timestamp</span>
+                    <span id="meta-time" class="meta-val">—</span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div style="display:flex;gap:8px;margin-top:4px;">
+                  <button id="again-btn" class="btn-again" style="flex:1;">
+                    <i class="fa-solid fa-rotate-right"></i> Analyze Another
+                  </button>
+                  <a href="reports.html" class="btn-again" style="flex:0 0 auto;text-decoration:none;">
+                    <i class="fa-solid fa-file-export"></i> Report
+                  </a>
                 </div>
               </div>
-              <div class="conf-section">
-                <div class="conf-row">
-                  <span class="conf-title">Confidence</span>
-                  <span id="conf-pct" class="conf-pct"></span>
-                </div>
-                <div class="conf-track">
-                  <div id="conf-bar" class="conf-bar"></div>
-                </div>
-              </div>
-              <div class="meta-row">
-                <div class="meta-item">
-                  <span class="meta-lbl">Model</span>
-                  <span id="meta-model" class="meta-val">—</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-lbl">Decision</span>
-                  <span id="meta-decision" class="meta-val">—</span>
-                </div>
-              </div>
-              <button id="again-btn" class="btn-again">🔄 Analyze Another</button>
+            </div>
+          </div>
+
+        </div><!-- end detect-grid -->
+
+        <!-- Recent Scans -->
+        <div class="card fade-up animate-delay-3" id="recent-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <h3 class="card-title">Recent Scans</h3>
+            <a href="history.html" style="margin-left:auto;font-size:0.78rem;color:var(--accent-blue);">View All →</a>
+          </div>
+          <div class="card-body">
+            <div class="recent-strip" id="recent-strip"></div>
+          </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="card fade-up animate-delay-4">
+          <div class="card-header">
+            <div class="card-icon"><i class="fa-solid fa-server"></i></div>
+            <h3 class="card-title">System Status</h3>
+          </div>
+          <div class="card-body">
+            <div class="health-row">
+              <span class="health-label">Backend API</span>
+              <span class="health-val" id="health-api">
+                <span class="health-dot offline" id="health-dot-api"></span>
+                <span id="health-api-text">Checking…</span>
+              </span>
+            </div>
+            <div class="health-row">
+              <span class="health-label">AI Model</span>
+              <span class="health-val"><span class="health-dot online"></span>Vision Transformer (ViT)</span>
+            </div>
+            <div class="health-row">
+              <span class="health-label">Face Detection</span>
+              <span class="health-val"><span class="health-dot online"></span>MTCNN Active</span>
+            </div>
+            <div class="health-row">
+              <span class="health-label">Version</span>
+              <span class="health-val">DeepGuard v2.0</span>
             </div>
           </div>
         </div>
 
-      </main><!-- end main-detect -->
+      </main>
+    </div><!-- end app-layout -->
 
-      <!-- ══════════════════════════════
-           HISTORY FULL PAGE
-      ══════════════════════════════ -->
-      <div class="hist-page hidden" id="hist-page">
+  </div><!-- end #app -->
 
-        <!-- History page header -->
-        <div class="hp-header">
-          <button class="hp-back-btn" id="hp-back-btn">← Back</button>
-          <div class="hp-title-wrap">
-            <h2 class="hp-title">📋 Detection History</h2>
-            <p class="hp-subtitle" id="hp-subtitle">All scans for this session</p>
-          </div>
-          <button class="hp-clear-btn" id="hp-clear-btn">🗑️ Clear All</button>
-        </div>
-
-        <!-- Filter bar -->
-        <div class="hp-filters">
-          <button class="hp-filter active" data-filter="all">All</button>
-          <button class="hp-filter" data-filter="Real">✅ Real</button>
-          <button class="hp-filter" data-filter="Fake">🚨 Fake</button>
-          <button class="hp-filter" data-filter="Uncertain">⚠️ Uncertain</button>
-        </div>
-
-        <!-- Grid of history cards -->
-        <div class="hp-grid" id="hp-grid">
-          <div class="hp-empty" id="hp-empty">
-            <div class="hp-empty-icon">📭</div>
-            <h3>No history yet</h3>
-            <p>Go back and scan an image to see results here</p>
-            <button class="hp-go-detect" id="hp-go-detect">🔍 Start Detecting</button>
-          </div>
-        </div>
-
-      </div><!-- end hist-page -->
-
-    </div><!-- end content-area -->
-  </div><!-- end app -->
-
-  <!-- Modal for viewing full image -->
+  <!-- Image Modal -->
   <div id="image-modal" class="image-modal hidden">
-    <span class="modal-close" id="modal-close">&times;</span>
-    <img class="modal-content" id="modal-img">
+    <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+    <img class="modal-content" id="modal-img" alt="Full preview" />
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="toast" role="alert"></div>
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
+  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="script.js"></script>
 </body>

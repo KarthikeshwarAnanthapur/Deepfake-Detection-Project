@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeepGuard AI Assistant — ChatGPT-style knowledge assistant for deepfake detection." />
+  <title>AI Assistant — DeepGuard v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="assistant.css" />
+</head>
+<body>
+  <div class="bg-canvas" aria-hidden="true"></div>
+  <div class="bg-orb-3" aria-hidden="true"></div>
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <header class="header">
+    <div class="header-left">
+      <button id="sidebar-toggle" class="hamburger" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+      <a href="index.html" class="logo"><div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#fff;font-size:0.9rem;"></i></div><span class="logo-text">Deep<span class="grad-text">Guard</span></span></a>
+      <span class="logo-tag">AI Assistant</span>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" id="theme-toggle-btn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <div class="user-pill"><div class="user-avatar" id="user-avatar">A</div><span class="user-name" id="user-name-label">User</span></div>
+      <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </header>
+
+  <div class="sb-overlay hidden" id="sb-overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-section-label">Main</div>
+      <a href="index.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-house"></i></span><span class="sb-nav-label">Dashboard</span></a>
+      <a href="history.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><span class="sb-nav-label">History</span></a>
+      <a href="analytics.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="sb-nav-label">Analytics</span></a>
+      <a href="assistant.html" class="sb-nav-btn active"><span class="sb-nav-icon"><i class="fa-solid fa-robot"></i></span><span class="sb-nav-label">AI Assistant</span></a>
+      <div class="sb-divider"></div><div class="sb-section-label">Resources</div>
+      <a href="reports.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-file-lines"></i></span><span class="sb-nav-label">Reports</span></a>
+      <a href="learn.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-book-open"></i></span><span class="sb-nav-label">Learn</span></a>
+      <div class="sb-divider"></div><div class="sb-section-label">System</div>
+      <a href="settings.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-gear"></i></span><span class="sb-nav-label">Settings</span></a>
+      <a href="about.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-circle-info"></i></span><span class="sb-nav-label">About</span></a>
+    </div>
+    <button class="sb-collapse-btn" id="sidebar-collapse-btn"><i class="fa-solid fa-chevron-left collapse-icon"></i><span class="collapse-label">Collapse</span></button>
+  </aside>
+
+  <div class="app-layout">
+    <main class="main-content" id="main-content" style="padding:0;display:flex;flex-direction:column;height:calc(100vh - 60px);">
+
+      <!-- Chat Container -->
+      <div class="chat-container">
+
+        <!-- Chat Header -->
+        <div class="chat-top-bar">
+          <div class="chat-avatar-lg">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div>
+            <div class="chat-top-title">DeepGuard AI Assistant</div>
+            <div class="chat-top-sub">Knowledge base: deepfakes, ViT, MTCNN, Celeb-DF, and more</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="clear-chat-btn" style="margin-left:auto;">
+            <i class="fa-solid fa-trash-can"></i> Clear
+          </button>
+        </div>
+
+        <!-- Suggested Questions -->
+        <div class="suggested-bar" id="suggested-bar">
+          <span class="suggested-bar-label">Suggested:</span>
+          <div class="suggested-chips-row" id="suggested-chips">
+            <span class="chip" data-q="What is a deepfake?">What is a deepfake?</span>
+            <span class="chip" data-q="How does Vision Transformer work?">How does ViT work?</span>
+            <span class="chip" data-q="What is MTCNN?">What is MTCNN?</span>
+            <span class="chip" data-q="What is Celeb-DF?">What is Celeb-DF?</span>
+            <span class="chip" data-q="What does confidence score mean?">Confidence score?</span>
+            <span class="chip" data-q="What are the limitations?">Limitations?</span>
+            <span class="chip" data-q="What is future scope?">Future scope?</span>
+            <span class="chip" data-q="What technologies were used?">Tech stack?</span>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chat-messages">
+          <!-- Initial greeting injected by JS -->
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="typing-indicator hidden" id="typing-indicator">
+          <div class="typing-bubble">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="typing-text">DeepGuard is thinking…</span>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-bar">
+          <div class="chat-input-wrap">
+            <input
+              id="chat-input"
+              type="text"
+              class="chat-input"
+              placeholder="Ask about deepfake detection, ViT, MTCNN, Celeb-DF…"
+              maxlength="400"
+              autocomplete="off"
+            />
+            <button id="chat-send-btn" class="chat-send-btn" aria-label="Send">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+          <div class="chat-input-hint">Press Enter to send · This assistant uses a local knowledge base, not a live AI API</div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+  <script src="shared.js"></script>
+  <script src="assistant.js"></script>
+</body>
+</html>

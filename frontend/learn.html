@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeepGuard Learn — Comprehensive educational resource on deepfakes, Vision Transformers, MTCNN, and AI detection methods." />
+  <title>Learn — DeepGuard v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Learn Page Styles ── */
+    .learn-tabs {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .learn-tab {
+      padding: 8px 18px;
+      border-radius: var(--radius-full);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.82rem; font-weight: 500;
+      cursor: pointer; transition: var(--transition);
+    }
+    .learn-tab:hover { border-color: var(--accent-purple); color: var(--text-primary); }
+    .learn-tab.active {
+      background: var(--accent-purple);
+      border-color: var(--accent-purple);
+      color: #fff;
+    }
+
+    .learn-section { display: none; }
+    .learn-section.active { display: block; }
+
+    /* Article Card */
+    .article-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .article-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .article-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-purple);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-glow);
+    }
+    .article-icon {
+      width: 42px; height: 42px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; margin-bottom: 14px;
+    }
+    .article-icon.purple { background: rgba(124,58,237,0.15); color: var(--accent-purple); }
+    .article-icon.blue   { background: rgba(6,182,212,0.15);  color: var(--accent-blue); }
+    .article-icon.green  { background: rgba(16,185,129,0.15); color: var(--green); }
+    .article-icon.red    { background: rgba(239,68,68,0.15);  color: var(--red); }
+    .article-icon.gold   { background: rgba(245,158,11,0.15); color: var(--gold); }
+    .article-tag {
+      display: inline-block;
+      padding: 2px 8px; border-radius: var(--radius-full);
+      font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+      background: rgba(124,58,237,0.12); color: var(--accent-purple);
+      margin-bottom: 8px;
+    }
+    .article-title { font-size: 0.92rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+    .article-desc  { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; }
+    .article-footer {
+      margin-top: 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .article-time { font-size: 0.7rem; color: var(--text-muted); }
+    .article-read  { font-size: 0.72rem; color: var(--accent-purple); }
+
+    /* Expanded Article */
+    .article-expanded {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-top: 20px;
+      display: none;
+    }
+    .article-expanded.visible { display: block; }
+    .article-expanded-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .article-expanded-title { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); }
+    .article-body h3 { font-size: 0.92rem; font-weight: 700; color: var(--accent-purple); margin: 18px 0 8px; }
+    .article-body p  { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 10px; }
+    .article-body ul { padding-left: 18px; margin-bottom: 12px; }
+    .article-body li { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.6; }
+    .article-body code {
+      background: var(--bg-secondary); padding: 2px 6px;
+      border-radius: 4px; font-size: 0.78rem; color: var(--accent-blue);
+      font-family: 'Courier New', monospace;
+    }
+    .close-article-btn {
+      margin-top: 20px; display: inline-flex; align-items: center; gap: 6px;
+    }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 24px; }
+    .timeline::before {
+      content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+      width: 2px; background: var(--border);
+    }
+    .timeline-item { position: relative; margin-bottom: 24px; }
+    .timeline-dot {
+      position: absolute; left: -20px; top: 4px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent-purple);
+      box-shadow: 0 0 8px rgba(124,58,237,0.5);
+    }
+    .timeline-year { font-size: 0.7rem; color: var(--accent-blue); font-weight: 700; margin-bottom: 4px; }
+    .timeline-title { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .timeline-desc  { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* Glossary */
+    .glossary-list { display: flex; flex-direction: column; gap: 10px; }
+    .glossary-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      transition: var(--transition);
+    }
+    .glossary-item:hover { border-color: var(--accent-purple); }
+    .glossary-term { font-size: 0.88rem; font-weight: 700; color: var(--accent-purple); margin-bottom: 4px; }
+    .glossary-def  { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* Search */
+    .learn-search-wrap {
+      position: relative; margin-bottom: 20px;
+    }
+    .learn-search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+    .learn-search {
+      width: 100%; padding: 10px 14px 10px 38px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); color: var(--text-primary);
+      font-size: 0.85rem; font-family: 'Inter', sans-serif;
+      transition: var(--transition);
+    }
+    .learn-search:focus { outline: none; border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
+    .learn-search::placeholder { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="bg-canvas" aria-hidden="true"></div>
+  <div class="bg-orb-3" aria-hidden="true"></div>
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <button id="sidebar-toggle" class="hamburger" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+      <a href="index.html" class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#fff;font-size:0.9rem;"></i></div>
+        <span class="logo-text">Deep<span class="grad-text">Guard</span></span>
+      </a>
+      <span class="logo-tag">Learn</span>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" id="theme-toggle-btn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <div class="user-pill"><div class="user-avatar" id="user-avatar">A</div><span class="user-name" id="user-name-label">User</span></div>
+      <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </header>
+
+  <div class="sb-overlay hidden" id="sb-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-section-label">Main</div>
+      <a href="index.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-house"></i></span><span class="sb-nav-label">Dashboard</span></a>
+      <a href="history.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><span class="sb-nav-label">History</span></a>
+      <a href="analytics.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="sb-nav-label">Analytics</span></a>
+      <a href="assistant.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-robot"></i></span><span class="sb-nav-label">AI Assistant</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">Resources</div>
+      <a href="reports.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-file-lines"></i></span><span class="sb-nav-label">Reports</span></a>
+      <a href="learn.html"    class="sb-nav-btn active"><span class="sb-nav-icon"><i class="fa-solid fa-book-open"></i></span><span class="sb-nav-label">Learn</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">System</div>
+      <a href="settings.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-gear"></i></span><span class="sb-nav-label">Settings</span></a>
+      <a href="about.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-circle-info"></i></span><span class="sb-nav-label">About</span></a>
+    </div>
+    <button class="sb-collapse-btn" id="sidebar-collapse-btn"><i class="fa-solid fa-chevron-left collapse-icon"></i><span class="collapse-label">Collapse</span></button>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="app-layout">
+    <main class="main-content" id="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header fade-up">
+        <h1 class="page-title"><span class="grad-text">Learning</span> Center</h1>
+        <p class="page-subtitle">Master deepfake detection — from fundamentals to cutting-edge AI research</p>
+      </div>
+
+      <!-- Search -->
+      <div class="learn-search-wrap fade-up animate-delay-1">
+        <i class="fa-solid fa-magnifying-glass learn-search-icon"></i>
+        <input type="text" class="learn-search" id="learn-search" placeholder="Search topics, glossary terms, technologies…" />
+      </div>
+
+      <!-- Tabs -->
+      <div class="learn-tabs fade-up animate-delay-1">
+        <button class="learn-tab active" data-tab="concepts">Core Concepts</button>
+        <button class="learn-tab" data-tab="technology">Technology</button>
+        <button class="learn-tab" data-tab="history">Timeline</button>
+        <button class="learn-tab" data-tab="glossary">Glossary</button>
+      </div>
+
+      <!-- ── Core Concepts Tab ── -->
+      <div class="learn-section active" id="tab-concepts">
+        <div class="article-grid" id="concepts-grid">
+
+          <div class="article-card" data-article="deepfakes">
+            <div class="article-icon purple"><i class="fa-solid fa-masks-theater"></i></div>
+            <div class="article-tag">Fundamentals</div>
+            <div class="article-title">What Are Deepfakes?</div>
+            <div class="article-desc">Learn how AI-generated synthetic media is created using GANs and diffusion models, and why detection is critical.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>4 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="detection">
+            <div class="article-icon blue"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+            <div class="article-tag">Detection</div>
+            <div class="article-title">How Detection Works</div>
+            <div class="article-desc">Explore the pipeline from face extraction to classification — how the model spots manipulation artifacts.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>6 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="artifacts">
+            <div class="article-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="article-tag">Artifacts</div>
+            <div class="article-title">Visual Manipulation Artifacts</div>
+            <div class="article-desc">Understand the telltale signs deepfake models leave behind — blending boundaries, texture anomalies, lighting inconsistencies.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>5 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="dataset">
+            <div class="article-icon green"><i class="fa-solid fa-database"></i></div>
+            <div class="article-tag">Dataset</div>
+            <div class="article-title">Celeb-DF v2 Dataset</div>
+            <div class="article-desc">Learn about the high-quality benchmark dataset used to train DeepGuard — its composition, challenges, and why it was chosen.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>3 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="ethics">
+            <div class="article-icon gold"><i class="fa-solid fa-scale-balanced"></i></div>
+            <div class="article-tag">Ethics</div>
+            <div class="article-title">Ethics of Deepfakes</div>
+            <div class="article-desc">Why deepfakes pose serious risks to trust, democracy, and personal identity — and how detection tools fight back.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>5 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="limits">
+            <div class="article-icon purple"><i class="fa-solid fa-gauge"></i></div>
+            <div class="article-tag">Limitations</div>
+            <div class="article-title">Model Limitations</div>
+            <div class="article-desc">No model is perfect — understand when DeepGuard may struggle and how to interpret uncertain predictions.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>3 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Expanded Article Area -->
+        <div class="article-expanded" id="article-expanded">
+          <div class="article-expanded-header">
+            <div class="article-icon purple" id="exp-icon"><i class="fa-solid fa-book"></i></div>
+            <div class="article-expanded-title" id="exp-title">Article</div>
+          </div>
+          <div class="article-body" id="exp-body"></div>
+          <button class="btn btn-ghost btn-sm close-article-btn" id="close-article-btn">
+            <i class="fa-solid fa-arrow-left"></i> Back to Articles
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Technology Tab ── -->
+      <div class="learn-section" id="tab-technology">
+        <div class="article-grid">
+
+          <div class="article-card" data-article="vit">
+            <div class="article-icon purple"><i class="fa-solid fa-eye"></i></div>
+            <div class="article-tag">Architecture</div>
+            <div class="article-title">Vision Transformer (ViT)</div>
+            <div class="article-desc">How transformer self-attention, patch embeddings, and positional encoding work together for image classification.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>8 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="mtcnn">
+            <div class="article-icon blue"><i class="fa-solid fa-face-smile"></i></div>
+            <div class="article-tag">Face Detection</div>
+            <div class="article-title">MTCNN Face Detector</div>
+            <div class="article-desc">Multi-task Cascaded Convolutional Networks — how it precisely locates and crops faces in real-world images.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>5 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="gans">
+            <div class="article-icon red"><i class="fa-solid fa-network-wired"></i></div>
+            <div class="article-tag">Generation</div>
+            <div class="article-title">GANs & Diffusion Models</div>
+            <div class="article-desc">The adversarial training loop behind deepfake creation — generators, discriminators, and modern diffusion approaches.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>7 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="metrics">
+            <div class="article-icon green"><i class="fa-solid fa-chart-bar"></i></div>
+            <div class="article-tag">Evaluation</div>
+            <div class="article-title">Model Evaluation Metrics</div>
+            <div class="article-desc">Accuracy, precision, recall, F1-score — how we measure if a detection model is actually good.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>4 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+          <div class="article-card" data-article="fastapi">
+            <div class="article-icon gold"><i class="fa-solid fa-server"></i></div>
+            <div class="article-tag">Backend</div>
+            <div class="article-title">FastAPI Backend</div>
+            <div class="article-desc">How the Python FastAPI server exposes the ViT model as a REST API that the frontend calls in real-time.</div>
+            <div class="article-footer">
+              <span class="article-time"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>4 min read</span>
+              <span class="article-read">Read →</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── History Timeline Tab ── -->
+      <div class="learn-section" id="tab-history">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon"><i class="fa-solid fa-timeline"></i></div>
+            <h2 class="card-title">Deepfake History Timeline</h2>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2014</div>
+                <div class="timeline-title">GANs Invented by Goodfellow et al.</div>
+                <div class="timeline-desc">Ian Goodfellow introduces Generative Adversarial Networks, laying the mathematical foundation for synthetic image generation.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2017</div>
+                <div class="timeline-title">First "Deepfake" Videos Appear</div>
+                <div class="timeline-desc">Reddit user "deepfakes" posts face-swapped celebrity videos using encoder-decoder GAN architecture, coining the term "deepfake".</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2018</div>
+                <div class="timeline-title">FaceApp & DeepFaceLab Go Mainstream</div>
+                <div class="timeline-desc">User-friendly deepfake tools emerge, enabling non-experts to create convincing face swaps. Detection research accelerates.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2019</div>
+                <div class="timeline-title">Celeb-DF Dataset Released</div>
+                <div class="timeline-desc">A high-quality deepfake benchmark dataset of celebrity videos is released, enabling standardized evaluation of detection models.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2020</div>
+                <div class="timeline-title">FaceForensics++ & DFDC</div>
+                <div class="timeline-desc">Facebook's Deepfake Detection Challenge attracts 2,000+ teams. Vision Transformers are introduced for image recognition.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2021</div>
+                <div class="timeline-title">ViT Applied to Deepfake Detection</div>
+                <div class="timeline-desc">Researchers begin applying Vision Transformers to deepfake detection, showing superior accuracy over CNN-based approaches.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2022–2024</div>
+                <div class="timeline-title">Diffusion Models & Audio Deepfakes</div>
+                <div class="timeline-desc">DALL-E, Stable Diffusion, and voice cloning tools create new detection challenges. DeepGuard v2.0 uses ViT for state-of-the-art detection.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Glossary Tab ── -->
+      <div class="learn-section" id="tab-glossary">
+        <div class="learn-search-wrap">
+          <i class="fa-solid fa-magnifying-glass learn-search-icon"></i>
+          <input type="text" class="learn-search" id="glossary-search" placeholder="Search glossary terms…" />
+        </div>
+        <div class="glossary-list" id="glossary-list">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <script src="shared.js"></script>
+  <script>
+    const articles = {
+      deepfakes: {
+        title: 'What Are Deepfakes?', icon: 'fa-masks-theater', iconClass: 'purple',
+        body: `
+          <h3>Definition</h3>
+          <p>A <strong>deepfake</strong> is synthetic media — typically video or images — where a person's likeness has been replaced or manipulated using artificial intelligence. The term combines "deep learning" and "fake".</p>
+          <h3>How They're Created</h3>
+          <p>Most deepfakes use <code>Generative Adversarial Networks (GANs)</code> or modern diffusion models. A GAN pits two neural networks against each other:</p>
+          <ul>
+            <li><strong>Generator</strong>: Creates fake images/videos trying to fool the discriminator</li>
+            <li><strong>Discriminator</strong>: Tries to distinguish real from fake content</li>
+            <li>Over thousands of iterations, the generator learns to produce increasingly convincing fakes</li>
+          </ul>
+          <h3>Why It Matters</h3>
+          <p>Deepfakes pose serious risks including misinformation, political manipulation, identity fraud, and non-consensual synthetic media. Detection tools like DeepGuard are critical defenses against these threats.</p>
+          <h3>Types of Deepfakes</h3>
+          <ul>
+            <li><strong>Face Swap</strong>: Replace one person's face with another's</li>
+            <li><strong>Face Reenactment</strong>: Animate a static face with different expressions</li>
+            <li><strong>Entire Face Synthesis</strong>: Generate a completely artificial face</li>
+            <li><strong>Audio Deepfakes</strong>: Clone a person's voice for fake speech</li>
+          </ul>
+        `
+      },
+      detection: {
+        title: 'How Detection Works', icon: 'fa-magnifying-glass-chart', iconClass: 'blue',
+        body: `
+          <h3>The Detection Pipeline</h3>
+          <p>DeepGuard uses a multi-stage pipeline to analyze uploaded images for deepfake artifacts:</p>
+          <ul>
+            <li><strong>Step 1 — Face Detection</strong>: MTCNN locates and crops the face region, removing irrelevant background noise</li>
+            <li><strong>Step 2 — Preprocessing</strong>: The face is resized to 224×224 pixels and normalized to [0,1] range</li>
+            <li><strong>Step 3 — ViT Inference</strong>: The Vision Transformer processes patch embeddings and produces a classification probability</li>
+            <li><strong>Step 4 — Threshold</strong>: Scores above 0.6 → Real, below 0.4 → Fake, in between → Uncertain</li>
+          </ul>
+          <h3>What the Model Looks For</h3>
+          <p>The ViT model has learned to detect subtle manipulation artifacts through training on thousands of real and fake face images:</p>
+          <ul>
+            <li>Facial boundary blending artifacts (unnatural edges around face)</li>
+            <li>Skin texture inconsistencies (overly smooth or pixelated regions)</li>
+            <li>Lighting direction mismatches</li>
+            <li>Subtle compression artifacts from GAN generation</li>
+          </ul>
+          <h3>Confidence Scores</h3>
+          <p>The model outputs a probability score (0–100%). High confidence means the model strongly believes its classification. Low confidence results in an "Uncertain" label.</p>
+        `
+      },
+      artifacts: {
+        title: 'Visual Manipulation Artifacts', icon: 'fa-triangle-exclamation', iconClass: 'red',
+        body: `
+          <h3>What Are Artifacts?</h3>
+          <p>Deepfake generation algorithms leave behind subtle visual artifacts — imperfections introduced during the synthesis process that betray the artificial origin of an image.</p>
+          <h3>Common Artifact Types</h3>
+          <ul>
+            <li><strong>Blending Boundaries</strong>: Unnatural transitions between the synthetic face and the original neck/hair region</li>
+            <li><strong>Overly Smooth Skin</strong>: GANs often produce unnaturally perfect skin without natural pores or fine wrinkles</li>
+            <li><strong>Eye Reflections</strong>: Inconsistent or missing catchlights (light reflections in pupils)</li>
+            <li><strong>Ear/Hair Artifacts</strong>: Complex structures like hair and ears are difficult to synthesize perfectly</li>
+            <li><strong>Temporal Flickering</strong>: In videos, subtle frame-to-frame inconsistencies</li>
+            <li><strong>Compression Artifacts</strong>: GAN-generated images have specific frequency-domain signatures</li>
+          </ul>
+          <h3>Why They're Subtle</h3>
+          <p>Modern deepfake models produce artifacts that are invisible to the naked eye but detectable by deep learning models trained on thousands of examples. This is the "cat-and-mouse" arms race between generation and detection.</p>
+        `
+      },
+      dataset: {
+        title: 'Celeb-DF v2 Dataset', icon: 'fa-database', iconClass: 'green',
+        body: `
+          <h3>What is Celeb-DF?</h3>
+          <p>Celeb-DF v2 is a large-scale, high-quality deepfake video benchmark dataset developed by researchers at the University at Albany. It was designed specifically to overcome the quality limitations of earlier datasets.</p>
+          <h3>Dataset Statistics</h3>
+          <ul>
+            <li>590 real videos from YouTube of celebrity interviews</li>
+            <li>5,639 deepfake videos generated with improved GAN methods</li>
+            <li>Significantly higher visual quality than predecessors (FaceForensics++, DFDC)</li>
+            <li>Diverse demographics, lighting conditions, and resolutions</li>
+          </ul>
+          <h3>Why Celeb-DF?</h3>
+          <p>Most earlier datasets contained visually poor deepfakes that were easily detected by simple classifiers. Celeb-DF v2 uses advanced synthesis techniques, making it a genuine challenge that forces models to learn meaningful, generalizable features.</p>
+          <h3>Preprocessing</h3>
+          <p>Individual video frames are extracted, faces detected via MTCNN, cropped with a 30-pixel margin, and resized to 224×224 pixels for training.</p>
+        `
+      },
+      ethics: {
+        title: 'Ethics of Deepfakes', icon: 'fa-scale-balanced', iconClass: 'gold',
+        body: `
+          <h3>The Dual-Use Problem</h3>
+          <p>Deepfake technology has legitimate uses in film production, education, accessibility, and creative arts. However, it also enables serious harms that demand ethical consideration and detection tools.</p>
+          <h3>Key Risks</h3>
+          <ul>
+            <li><strong>Misinformation</strong>: Fabricated political speeches or news events that influence public opinion</li>
+            <li><strong>Identity Fraud</strong>: Bypassing biometric authentication systems</li>
+            <li><strong>Non-Consensual Media</strong>: Synthetic intimate imagery without consent</li>
+            <li><strong>Financial Fraud</strong>: Voice/video cloning for executive impersonation scams</li>
+            <li><strong>Erosion of Trust</strong>: The "liar's dividend" — real content dismissed as fake</li>
+          </ul>
+          <h3>Legal Landscape</h3>
+          <p>Many jurisdictions are developing specific deepfake legislation. Detection tools are increasingly required by platforms, governments, and organizations to maintain information integrity.</p>
+          <h3>DeepGuard's Role</h3>
+          <p>DeepGuard is a defensive tool — it helps individuals and organizations verify the authenticity of facial media, contributing to a more trustworthy digital ecosystem.</p>
+        `
+      },
+      limits: {
+        title: 'Model Limitations', icon: 'fa-gauge', iconClass: 'purple',
+        body: `
+          <h3>Where the Model Excels</h3>
+          <p>DeepGuard performs well on high-quality face images similar to its training data — clear lighting, frontal faces, minimal compression, and realistic deepfakes from established GAN architectures.</p>
+          <h3>Known Limitations</h3>
+          <ul>
+            <li><strong>Unseen Deepfake Methods</strong>: New generation techniques not in training data may evade detection</li>
+            <li><strong>Low-Resolution Images</strong>: Heavy compression destroys the subtle artifacts the model relies on</li>
+            <li><strong>No Face</strong>: MTCNN requires a visible human face — images without clear faces return an error</li>
+            <li><strong>Adversarial Attacks</strong>: Carefully crafted perturbations can fool any neural network</li>
+            <li><strong>Partial Faces</strong>: Heavy occlusion (masks, sunglasses) reduces accuracy</li>
+            <li><strong>Extreme Angles</strong>: Profile or extreme overhead views are harder to classify</li>
+          </ul>
+          <h3>Interpreting Uncertain Results</h3>
+          <p>An "Uncertain" result doesn't mean the image is safe — it means the model lacked sufficient confidence. In high-stakes situations, always seek additional verification methods.</p>
+          <h3>Future Improvements</h3>
+          <p>Multi-dataset training, temporal video analysis, ensemble models, and adversarial training are planned to improve robustness in future versions.</p>
+        `
+      },
+      vit: {
+        title: 'Vision Transformer (ViT)', icon: 'fa-eye', iconClass: 'purple',
+        body: `
+          <h3>What is ViT?</h3>
+          <p>The Vision Transformer (ViT) adapts the transformer architecture — originally designed for NLP — to image recognition. Introduced by Dosovitskiy et al. (2020), it achieves state-of-the-art results by treating image patches as "tokens".</p>
+          <h3>Architecture Overview</h3>
+          <ul>
+            <li><strong>Patch Embedding</strong>: Image is split into 16×16 pixel patches, each linearly projected to a vector</li>
+            <li><strong>Positional Embedding</strong>: Learnable position encodings added to preserve spatial information</li>
+            <li><strong>Class Token [CLS]</strong>: A special learnable token prepended that aggregates global information</li>
+            <li><strong>Transformer Encoder</strong>: Multiple layers of multi-head self-attention + feed-forward networks</li>
+            <li><strong>MLP Head</strong>: Final classification layer on the [CLS] token output</li>
+          </ul>
+          <h3>Why ViT for Deepfake Detection?</h3>
+          <p>Unlike CNNs that process local patches, ViT's self-attention mechanism can relate any two patches across the entire image simultaneously. This is ideal for detecting global inconsistencies in deepfakes that span multiple face regions.</p>
+          <h3>Self-Attention</h3>
+          <p>Each patch learns to "attend" to all other patches, weighting their importance. The model discovers which facial regions are most informative for the Real vs. Fake decision.</p>
+        `
+      },
+      mtcnn: {
+        title: 'MTCNN Face Detector', icon: 'fa-face-smile', iconClass: 'blue',
+        body: `
+          <h3>What is MTCNN?</h3>
+          <p>Multi-task Cascaded Convolutional Networks (MTCNN) is a face detection algorithm that simultaneously detects faces and locates facial landmarks (eyes, nose, mouth corners). It uses a 3-stage cascade pipeline.</p>
+          <h3>The 3-Stage Pipeline</h3>
+          <ul>
+            <li><strong>P-Net (Proposal Network)</strong>: Rapidly scans image at multiple scales, generating candidate face regions</li>
+            <li><strong>R-Net (Refine Network)</strong>: Filters false positives and refines bounding boxes</li>
+            <li><strong>O-Net (Output Network)</strong>: Produces the final precise face bounding box and 5 landmark points</li>
+          </ul>
+          <h3>Why MTCNN for DeepGuard?</h3>
+          <p>Accurate face cropping is critical — the ViT model must analyze the face region, not irrelevant backgrounds. MTCNN's landmark detection also helps assess face quality. A 30-pixel margin is added to the crop to include forehead and chin artifacts.</p>
+          <h3>Limitations</h3>
+          <p>MTCNN may struggle with very small faces, extreme angles, heavy occlusion, or non-photorealistic illustrations. When no face is detected, DeepGuard returns an informative error.</p>
+        `
+      },
+      gans: {
+        title: 'GANs & Diffusion Models', icon: 'fa-network-wired', iconClass: 'red',
+        body: `
+          <h3>Generative Adversarial Networks (GANs)</h3>
+          <p>GANs use an adversarial training process between two networks:</p>
+          <ul>
+            <li><strong>Generator</strong>: Takes random noise, outputs a synthetic image</li>
+            <li><strong>Discriminator</strong>: Classifies images as real or generated</li>
+            <li>Training continues until the generator fools the discriminator consistently</li>
+          </ul>
+          <h3>Key GAN Variants for Deepfakes</h3>
+          <ul>
+            <li><strong>FaceSwap-GAN</strong>: Encoder-decoder architecture for face swapping</li>
+            <li><strong>StarGAN v2</strong>: Multi-domain face generation</li>
+            <li><strong>StyleGAN3</strong>: Photo-realistic face synthesis</li>
+          </ul>
+          <h3>Diffusion Models</h3>
+          <p>A newer approach that learns to reverse a noise-addition process. Models like Stable Diffusion generate high-quality faces without GAN training instability. They're increasingly used in modern deepfakes.</p>
+          <h3>Detection Implications</h3>
+          <p>Different generation methods leave different artifact signatures. DeepGuard's training on diverse deepfake types improves cross-method generalization.</p>
+        `
+      },
+      metrics: {
+        title: 'Model Evaluation Metrics', icon: 'fa-chart-bar', iconClass: 'green',
+        body: `
+          <h3>Confusion Matrix Basics</h3>
+          <p>All classification metrics derive from the confusion matrix: True Positives (TP), True Negatives (TN), False Positives (FP), False Negatives (FN).</p>
+          <h3>Key Metrics</h3>
+          <ul>
+            <li><strong>Accuracy</strong> = (TP + TN) / Total — overall correctness</li>
+            <li><strong>Precision</strong> = TP / (TP + FP) — of detected fakes, how many are actually fake</li>
+            <li><strong>Recall</strong> = TP / (TP + FN) — of all fakes, how many were caught</li>
+            <li><strong>F1-Score</strong> = 2 × (Precision × Recall) / (Precision + Recall) — harmonic mean</li>
+            <li><strong>AUC-ROC</strong> — area under the ROC curve; 1.0 = perfect, 0.5 = random</li>
+          </ul>
+          <h3>Which Matters Most?</h3>
+          <p>For security applications, <strong>recall</strong> is critical — missing a deepfake (False Negative) is worse than a false alarm. DeepGuard balances precision and recall via the configurable confidence threshold.</p>
+        `
+      },
+      fastapi: {
+        title: 'FastAPI Backend', icon: 'fa-server', iconClass: 'gold',
+        body: `
+          <h3>Architecture</h3>
+          <p>DeepGuard uses FastAPI — a modern, high-performance Python web framework — to serve the ViT model as a REST API. It runs on <code>uvicorn</code> (ASGI server) on <code>http://127.0.0.1:8000</code>.</p>
+          <h3>Key Endpoints</h3>
+          <ul>
+            <li><code>GET /health</code> — health check, confirms backend is running</li>
+            <li><code>POST /predict</code> — accepts multipart file upload, runs MTCNN + ViT inference, returns JSON result</li>
+          </ul>
+          <h3>Request Flow</h3>
+          <p>Frontend uploads image → FastAPI saves temp file → <code>predict_image()</code> runs MTCNN face detection → ViT model inference → JSON response with prediction, confidence, reason, and indicators → Frontend displays result.</p>
+          <h3>CORS Configuration</h3>
+          <p>CORS middleware is configured to allow all origins during development. In production, restrict to specific domains for security.</p>
+          <h3>Starting the Server</h3>
+          <p>Run <code>uvicorn backend.app:app --reload</code> from the project root, or use <code>python -m uvicorn backend.app:app</code>.</p>
+        `
+      }
+    };
+
+    const glossaryTerms = [
+      { term: 'Deepfake', def: 'AI-generated or manipulated media where a person\'s likeness is synthetically created or replaced using deep learning techniques.' },
+      { term: 'GAN (Generative Adversarial Network)', def: 'A neural network architecture where a generator creates synthetic data and a discriminator tries to distinguish real from fake, improving both through adversarial training.' },
+      { term: 'Vision Transformer (ViT)', def: 'A transformer-based neural network architecture applied to image recognition by treating image patches as sequence tokens processed with self-attention.' },
+      { term: 'MTCNN', def: 'Multi-task Cascaded Convolutional Networks — a face detection algorithm that locates faces and facial landmarks using a 3-stage cascade pipeline.' },
+      { term: 'Self-Attention', def: 'A mechanism where each element in a sequence weighs the importance of all other elements to produce a context-aware representation.' },
+      { term: 'Patch Embedding', def: 'Splitting an image into fixed-size patches and projecting each into a high-dimensional vector for transformer processing.' },
+      { term: 'Positional Embedding', def: 'Learnable vectors added to patch embeddings to convey spatial location information to the transformer.' },
+      { term: 'MLP Head', def: 'The final multi-layer perceptron classification layer that maps transformer output to class probabilities.' },
+      { term: 'Confidence Score', def: 'A probability (0–100%) representing how certain the model is about its prediction. Higher = more confident.' },
+      { term: 'Celeb-DF v2', def: 'A high-quality deepfake benchmark dataset containing real and manipulated celebrity videos, used to train DeepGuard.' },
+      { term: 'AUC-ROC', def: 'Area Under the Receiver Operating Characteristic Curve — measures classification quality; 1.0 is perfect, 0.5 is random.' },
+      { term: 'False Positive', def: 'A real image incorrectly classified as fake (false alarm).' },
+      { term: 'False Negative', def: 'A fake image incorrectly classified as real (missed detection) — the more dangerous error in security contexts.' },
+      { term: 'FastAPI', def: 'A modern Python web framework for building high-performance REST APIs, used to serve the DeepGuard model.' },
+      { term: 'Diffusion Model', def: 'A generative model that learns to reverse a gradual noise-addition process, producing high-quality synthetic images (e.g., Stable Diffusion).' },
+      { term: 'Face Swap', def: 'A deepfake technique that replaces one person\'s face in an image or video with another person\'s face.' },
+      { term: 'Artifact', def: 'Unintended visual anomaly introduced during deepfake synthesis — the telltale signs that betray artificial origin.' },
+      { term: 'Transformer Encoder', def: 'The core component of transformer models consisting of multi-head self-attention and feed-forward network layers.' },
+      { term: 'Normalization', def: 'Scaling pixel values to a standard range (typically 0–1) before feeding into a neural network for stable training.' },
+      { term: 'CORS', def: 'Cross-Origin Resource Sharing — a browser security mechanism that controls which domains can access an API.' },
+    ];
+
+    function renderGlossary(filter = '') {
+      const list = document.getElementById('glossary-list');
+      const filtered = filter ? glossaryTerms.filter(t =>
+        t.term.toLowerCase().includes(filter.toLowerCase()) ||
+        t.def.toLowerCase().includes(filter.toLowerCase())
+      ) : glossaryTerms;
+      list.innerHTML = filtered.map(t => `
+        <div class="glossary-item">
+          <div class="glossary-term">${dgEscHtml(t.term)}</div>
+          <div class="glossary-def">${dgEscHtml(t.def)}</div>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);padding:20px;">No terms found.</p>';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = dgPageBoot('learn');
+      if (!user) return;
+
+      // Tabs
+      document.querySelectorAll('.learn-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.learn-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.learn-section').forEach(s => s.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+          document.getElementById('article-expanded').classList.remove('visible');
+        });
+      });
+
+      // Article cards
+      document.querySelectorAll('.article-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const key = card.dataset.article;
+          const art = articles[key];
+          if (!art) return;
+          const exp = document.getElementById('article-expanded');
+          document.getElementById('exp-title').textContent = art.title;
+          document.getElementById('exp-icon').className = `article-icon ${art.iconClass}`;
+          document.getElementById('exp-icon').innerHTML = `<i class="fa-solid ${art.icon}"></i>`;
+          document.getElementById('exp-body').innerHTML = art.body;
+          exp.classList.add('visible');
+          exp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      // Close article
+      document.getElementById('close-article-btn').addEventListener('click', () => {
+        document.getElementById('article-expanded').classList.remove('visible');
+      });
+
+      // Glossary
+      renderGlossary();
+      document.getElementById('glossary-search').addEventListener('input', (e) => {
+        renderGlossary(e.target.value);
+      });
+
+      // Global search redirects to concepts tab
+      document.getElementById('learn-search').addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        if (!val) return;
+        const found = glossaryTerms.find(t =>
+          t.term.toLowerCase().includes(val) || t.def.toLowerCase().includes(val)
+        );
+        if (found) {
+          document.querySelectorAll('.learn-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.learn-section').forEach(s => s.classList.remove('active'));
+          document.querySelector('[data-tab="glossary"]').classList.add('active');
+          document.getElementById('tab-glossary').classList.add('active');
+          renderGlossary(val);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

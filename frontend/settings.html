@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeepGuard Settings — Customize confidence thresholds, themes, privacy, and detection preferences." />
+  <title>Settings — DeepGuard v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Settings Page Styles ── */
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .settings-layout { grid-template-columns: 1fr; }
+      .settings-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+      .settings-nav-btn { flex: 1; min-width: 120px; }
+    }
+    .settings-nav {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .settings-nav-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      background: transparent; border: 1px solid transparent;
+      color: var(--text-secondary); font-size: 0.84rem; font-weight: 500;
+      cursor: pointer; transition: var(--transition); text-align: left;
+      font-family: 'Inter', sans-serif;
+    }
+    .settings-nav-btn:hover {
+      background: var(--bg-card); color: var(--text-primary);
+    }
+    .settings-nav-btn.active {
+      background: rgba(124,58,237,0.12);
+      border-color: rgba(124,58,237,0.3);
+      color: var(--accent-purple);
+    }
+    .settings-nav-btn i { width: 16px; text-align: center; }
+
+    .settings-panel { display: none; }
+    .settings-panel.active { display: block; }
+
+    /* Setting Groups */
+    .setting-group {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .setting-group-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem; font-weight: 700;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-info { flex: 1; min-width: 0; }
+    .setting-label { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    .setting-desc  { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Toggle Switch */
+    .toggle-wrap { flex-shrink: 0; }
+    .toggle {
+      position: relative; display: inline-block;
+      width: 44px; height: 24px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: var(--bg-secondary); border-radius: 24px;
+      transition: 0.3s; border: 1px solid var(--border);
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; left: 3px; bottom: 3px;
+      background: var(--text-muted); border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--accent-purple); border-color: var(--accent-purple); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: #fff; }
+
+    /* Range Slider */
+    .range-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .range-val { font-size: 0.82rem; font-weight: 700; color: var(--accent-purple); min-width: 38px; text-align: right; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 140px; height: 4px;
+      background: var(--bg-secondary); border-radius: 4px;
+      outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent-purple); cursor: pointer;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+      transition: var(--transition);
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 5px rgba(124,58,237,0.3); }
+
+    /* Select */
+    .setting-select {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      color: var(--text-primary); border-radius: var(--radius-sm);
+      padding: 7px 10px; font-size: 0.82rem; cursor: pointer;
+      font-family: 'Inter', sans-serif; min-width: 120px;
+      transition: var(--transition);
+    }
+    .setting-select:focus { outline: none; border-color: var(--accent-purple); }
+
+    /* Theme Swatch Grid */
+    .theme-swatches {
+      display: flex; gap: 10px; flex-wrap: wrap; padding: 14px 18px;
+    }
+    .theme-swatch {
+      width: 56px; text-align: center; cursor: pointer;
+    }
+    .swatch-preview {
+      width: 56px; height: 38px; border-radius: var(--radius-sm);
+      border: 2px solid transparent; transition: var(--transition);
+      margin-bottom: 5px; position: relative; overflow: hidden;
+    }
+    .swatch-preview::after {
+      content: ''; position: absolute;
+      width: 8px; height: 8px; border-radius: 50%;
+      top: 6px; right: 6px;
+    }
+    .swatch-preview:hover { border-color: var(--accent-purple); transform: scale(1.05); }
+    .swatch-preview.selected { border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(124,58,237,0.5); }
+    .swatch-name { font-size: 0.68rem; color: var(--text-muted); }
+    .swatch-dark    { background: linear-gradient(135deg, #07070f 50%, #7c3aed 100%); }
+    .swatch-light   { background: linear-gradient(135deg, #f8f7ff 50%, #7c3aed 100%); }
+    .swatch-amoled  { background: linear-gradient(135deg, #000000 50%, #7c3aed 100%); }
+    .swatch-cyberpunk { background: linear-gradient(135deg, #0a0a1a 50%, #00ffff 100%); }
+
+    /* Danger Zone */
+    .danger-zone { border-color: rgba(239,68,68,0.2); }
+    .danger-zone .setting-group-header { color: var(--red); }
+
+    /* Saved indicator */
+    .save-indicator {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; color: var(--green);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .save-indicator.visible { opacity: 1; }
+
+    /* API URL input */
+    .api-input {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      color: var(--text-primary); border-radius: var(--radius-sm);
+      padding: 8px 12px; font-size: 0.82rem; font-family: 'Courier New', monospace;
+      width: 220px; transition: var(--transition);
+    }
+    .api-input:focus { outline: none; border-color: var(--accent-purple); }
+  </style>
+</head>
+<body>
+  <div class="bg-canvas" aria-hidden="true"></div>
+  <div class="bg-orb-3" aria-hidden="true"></div>
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <button id="sidebar-toggle" class="hamburger" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+      <a href="index.html" class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#fff;font-size:0.9rem;"></i></div>
+        <span class="logo-text">Deep<span class="grad-text">Guard</span></span>
+      </a>
+      <span class="logo-tag">Settings</span>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" id="theme-toggle-btn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <div class="user-pill"><div class="user-avatar" id="user-avatar">A</div><span class="user-name" id="user-name-label">User</span></div>
+      <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </header>
+
+  <div class="sb-overlay hidden" id="sb-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-section-label">Main</div>
+      <a href="index.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-house"></i></span><span class="sb-nav-label">Dashboard</span></a>
+      <a href="history.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><span class="sb-nav-label">History</span></a>
+      <a href="analytics.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="sb-nav-label">Analytics</span></a>
+      <a href="assistant.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-robot"></i></span><span class="sb-nav-label">AI Assistant</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">Resources</div>
+      <a href="reports.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-file-lines"></i></span><span class="sb-nav-label">Reports</span></a>
+      <a href="learn.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-book-open"></i></span><span class="sb-nav-label">Learn</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">System</div>
+      <a href="settings.html" class="sb-nav-btn active"><span class="sb-nav-icon"><i class="fa-solid fa-gear"></i></span><span class="sb-nav-label">Settings</span></a>
+      <a href="about.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-circle-info"></i></span><span class="sb-nav-label">About</span></a>
+    </div>
+    <button class="sb-collapse-btn" id="sidebar-collapse-btn"><i class="fa-solid fa-chevron-left collapse-icon"></i><span class="collapse-label">Collapse</span></button>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="app-layout">
+    <main class="main-content" id="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header fade-up">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h1 class="page-title"><span class="grad-text">App</span> Settings</h1>
+            <p class="page-subtitle">Customize detection behavior, appearance, and privacy</p>
+          </div>
+          <span class="save-indicator" id="save-indicator"><i class="fa-solid fa-circle-check"></i> Saved</span>
+        </div>
+      </div>
+
+      <!-- Settings Layout -->
+      <div class="settings-layout fade-up animate-delay-1">
+
+        <!-- Settings Nav -->
+        <nav class="settings-nav">
+          <button class="settings-nav-btn active" data-panel="detection"><i class="fa-solid fa-magnifying-glass"></i> Detection</button>
+          <button class="settings-nav-btn" data-panel="appearance"><i class="fa-solid fa-palette"></i> Appearance</button>
+          <button class="settings-nav-btn" data-panel="api"><i class="fa-solid fa-server"></i> API & Backend</button>
+          <button class="settings-nav-btn" data-panel="privacy"><i class="fa-solid fa-shield-halved"></i> Privacy</button>
+          <button class="settings-nav-btn" data-panel="account"><i class="fa-solid fa-user"></i> Account</button>
+        </nav>
+
+        <!-- Settings Panels -->
+        <div>
+
+          <!-- ── Detection Panel ── -->
+          <div class="settings-panel active" id="panel-detection">
+            <div class="setting-group">
+              <div class="setting-group-header">Detection Thresholds</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Confidence Threshold</div>
+                  <div class="setting-desc">Results below this % are marked "Uncertain". Lower = more detections flagged, higher = only high-confidence results shown.</div>
+                </div>
+                <div class="range-wrap">
+                  <input type="range" id="conf-threshold" min="20" max="80" value="50" step="5" />
+                  <span class="range-val" id="conf-threshold-val">50%</span>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Auto-Detect on Upload</div>
+                  <div class="setting-desc">Automatically run detection when an image is uploaded, without clicking "Analyze".</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="auto-detect" /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show Key Indicators</div>
+                  <div class="setting-desc">Display the list of detected visual indicators in the result panel.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="show-indicators" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Show AI Explanation</div>
+                  <div class="setting-desc">Display the human-readable explanation of the model's decision.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="show-explanation" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-group-header">Result Display</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Toast Notifications</div>
+                  <div class="setting-desc">Show popup notifications for detection results and system events.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="show-toasts" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Confidence Display Format</div>
+                  <div class="setting-desc">How to display the confidence score in results.</div>
+                </div>
+                <select class="setting-select" id="conf-format">
+                  <option value="percent">Percentage (85%)</option>
+                  <option value="decimal">Decimal (0.85)</option>
+                  <option value="bar">Bar only</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Appearance Panel ── -->
+          <div class="settings-panel" id="panel-appearance">
+            <div class="setting-group">
+              <div class="setting-group-header">Theme</div>
+              <div class="theme-swatches">
+                <div class="theme-swatch" data-theme="dark">
+                  <div class="swatch-preview swatch-dark" id="sw-dark"></div>
+                  <div class="swatch-name">Dark</div>
+                </div>
+                <div class="theme-swatch" data-theme="light">
+                  <div class="swatch-preview swatch-light" id="sw-light"></div>
+                  <div class="swatch-name">Light</div>
+                </div>
+                <div class="theme-swatch" data-theme="amoled">
+                  <div class="swatch-preview swatch-amoled" id="sw-amoled"></div>
+                  <div class="swatch-name">AMOLED</div>
+                </div>
+                <div class="theme-swatch" data-theme="cyberpunk">
+                  <div class="swatch-preview swatch-cyberpunk" id="sw-cyberpunk"></div>
+                  <div class="swatch-name">Cyberpunk</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-group-header">Animations</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Particle Background</div>
+                  <div class="setting-desc">Floating particles in the background (performance-intensive on low-end devices).</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="anim-particles" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Scan Animation</div>
+                  <div class="setting-desc">Show the scanning animation over the image during detection.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="anim-scan" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Reduce Motion</div>
+                  <div class="setting-desc">Disable all non-essential animations for accessibility.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="reduce-motion" /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── API Panel ── -->
+          <div class="settings-panel" id="panel-api">
+            <div class="setting-group">
+              <div class="setting-group-header">Backend Connection</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">API Base URL</div>
+                  <div class="setting-desc">The address where your FastAPI backend is running. Default: <code style="font-size:0.75rem;">http://127.0.0.1:8000</code></div>
+                </div>
+                <input type="text" class="api-input" id="api-url-input" value="http://127.0.0.1:8000" />
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Auto-check Backend Health</div>
+                  <div class="setting-desc">Ping the backend on login to display connection status.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="auto-health" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Health Check Interval</div>
+                  <div class="setting-desc">How often to re-check backend status (seconds). 0 = manual only.</div>
+                </div>
+                <div class="range-wrap">
+                  <input type="range" id="health-interval" min="0" max="60" value="30" step="5" />
+                  <span class="range-val" id="health-interval-val">30s</span>
+                </div>
+              </div>
+            </div>
+            <div class="setting-group">
+              <div class="setting-group-header">Requests</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Image Quality</div>
+                  <div class="setting-desc">JPEG quality for images sent to the API (when using crop). Higher = more accurate, larger upload.</div>
+                </div>
+                <div class="range-wrap">
+                  <input type="range" id="img-quality" min="70" max="100" value="95" step="5" />
+                  <span class="range-val" id="img-quality-val">95%</span>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:center;margin-top:8px;">
+              <button class="btn btn-primary btn-sm" id="test-api-btn" style="min-width:160px;">
+                <i class="fa-solid fa-plug"></i> Test Connection
+              </button>
+              <p id="api-test-result" style="font-size:0.78rem;color:var(--text-muted);margin-top:10px;"></p>
+            </div>
+          </div>
+
+          <!-- ── Privacy Panel ── -->
+          <div class="settings-panel" id="panel-privacy">
+            <div class="setting-group">
+              <div class="setting-group-header">Data Storage</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Save Detection History</div>
+                  <div class="setting-desc">Store your scan results in browser localStorage for the History and Analytics pages.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="save-history" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Store Image Thumbnails</div>
+                  <div class="setting-desc">Save image previews with history entries (increases storage usage). Disable to save space.</div>
+                </div>
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="save-thumbs" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">History Limit</div>
+                  <div class="setting-desc">Maximum number of detection records to keep in storage.</div>
+                </div>
+                <select class="setting-select" id="history-limit">
+                  <option value="20">20 entries</option>
+                  <option value="60" selected>60 entries</option>
+                  <option value="100">100 entries</option>
+                  <option value="0">Unlimited</option>
+                </select>
+              </div>
+            </div>
+            <div class="setting-group">
+              <div class="setting-group-header">Note on Privacy</div>
+              <div class="setting-row" style="display:block;">
+                <p style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;margin:0;">
+                  <i class="fa-solid fa-lock" style="color:var(--green);margin-right:6px;"></i>
+                  All detection processing happens <strong>locally on your machine</strong> via the FastAPI server. Images are uploaded to your local server only — no data is sent to external servers or the internet.
+                  History is stored <strong>only in your browser's localStorage</strong> and never leaves your device.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Account Panel ── -->
+          <div class="settings-panel" id="panel-account">
+            <div class="setting-group">
+              <div class="setting-group-header">Current Session</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Username</div>
+                  <div class="setting-desc">The name used to identify your detection history in localStorage.</div>
+                </div>
+                <span id="account-username" style="font-size:0.88rem;font-weight:700;color:var(--accent-purple);"></span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Session Storage</div>
+                  <div class="setting-desc">Your session is stored in sessionStorage and cleared when you close the tab.</div>
+                </div>
+                <span style="font-size:0.78rem;color:var(--green);"><i class="fa-solid fa-circle-check"></i> Active</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Storage Usage</div>
+                  <div class="setting-desc">Approximate localStorage used by DeepGuard history data.</div>
+                </div>
+                <span id="storage-usage" style="font-size:0.82rem;color:var(--text-secondary);">Calculating…</span>
+              </div>
+            </div>
+
+            <div class="setting-group danger-zone">
+              <div class="setting-group-header"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i>Danger Zone</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Clear Detection History</div>
+                  <div class="setting-desc">Permanently delete all your scan history from this browser. Cannot be undone.</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="clear-history-btn" style="border-color:var(--red);color:var(--red);">
+                  <i class="fa-solid fa-trash-can"></i> Clear History
+                </button>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Reset All Settings</div>
+                  <div class="setting-desc">Reset all DeepGuard preferences to their default values.</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="reset-settings-btn" style="border-color:var(--red);color:var(--red);">
+                  <i class="fa-solid fa-rotate-left"></i> Reset Settings
+                </button>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Logout</div>
+                  <div class="setting-desc">End your current session and return to the login screen.</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="panel-logout-btn">
+                  <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <script src="shared.js"></script>
+  <script>
+    const SETTINGS_KEY = 'dg_settings';
+
+    function loadSettings() {
+      try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { return {}; }
+    }
+    function saveSettings(s) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      const ind = document.getElementById('save-indicator');
+      ind.classList.add('visible');
+      setTimeout(() => ind.classList.remove('visible'), 2000);
+    }
+    function getSettings() {
+      const s = loadSettings();
+      return {
+        confThreshold: s.confThreshold ?? 50,
+        autoDetect:    s.autoDetect    ?? false,
+        showIndicators:s.showIndicators?? true,
+        showExplanation:s.showExplanation ?? true,
+        showToasts:    s.showToasts    ?? true,
+        confFormat:    s.confFormat    ?? 'percent',
+        animParticles: s.animParticles ?? true,
+        animScan:      s.animScan      ?? true,
+        reduceMotion:  s.reduceMotion  ?? false,
+        apiUrl:        s.apiUrl        ?? 'http://127.0.0.1:8000',
+        autoHealth:    s.autoHealth    ?? true,
+        healthInterval:s.healthInterval?? 30,
+        imgQuality:    s.imgQuality    ?? 95,
+        saveHistory:   s.saveHistory   ?? true,
+        saveThumbs:    s.saveThumbs    ?? true,
+        historyLimit:  s.historyLimit  ?? 60,
+      };
+    }
+
+    function applySettings(settings) {
+      // Detection
+      document.getElementById('conf-threshold').value = settings.confThreshold;
+      document.getElementById('conf-threshold-val').textContent = settings.confThreshold + '%';
+      document.getElementById('auto-detect').checked    = settings.autoDetect;
+      document.getElementById('show-indicators').checked = settings.showIndicators;
+      document.getElementById('show-explanation').checked = settings.showExplanation;
+      document.getElementById('show-toasts').checked    = settings.showToasts;
+      document.getElementById('conf-format').value      = settings.confFormat;
+      // Appearance
+      document.getElementById('anim-particles').checked = settings.animParticles;
+      document.getElementById('anim-scan').checked      = settings.animScan;
+      document.getElementById('reduce-motion').checked  = settings.reduceMotion;
+      updateThemeSwatches();
+      // API
+      document.getElementById('api-url-input').value    = settings.apiUrl;
+      document.getElementById('auto-health').checked    = settings.autoHealth;
+      document.getElementById('health-interval').value  = settings.healthInterval;
+      document.getElementById('health-interval-val').textContent = settings.healthInterval + 's';
+      document.getElementById('img-quality').value      = settings.imgQuality;
+      document.getElementById('img-quality-val').textContent = settings.imgQuality + '%';
+      // Privacy
+      document.getElementById('save-history').checked   = settings.saveHistory;
+      document.getElementById('save-thumbs').checked    = settings.saveThumbs;
+      document.getElementById('history-limit').value    = settings.historyLimit;
+    }
+
+    function updateThemeSwatches() {
+      const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+      document.querySelectorAll('.swatch-preview').forEach(s => s.classList.remove('selected'));
+      const active = document.getElementById('sw-' + cur);
+      if (active) active.classList.add('selected');
+    }
+
+    function calcStorageUsage() {
+      let bytes = 0;
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('dg_')) bytes += (localStorage.getItem(key) || '').length * 2;
+      }
+      const kb = (bytes / 1024).toFixed(1);
+      document.getElementById('storage-usage').textContent = `~${kb} KB`;
+    }
+
+    function bind(id, prop, transform) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('change', () => {
+        const s = loadSettings();
+        s[prop] = transform ? transform(el) : (el.type === 'checkbox' ? el.checked : el.value);
+        saveSettings(s);
+        if (prop === 'confThreshold') localStorage.setItem('dg_conf_threshold', s[prop] / 100);
+      });
+    }
+    function bindRange(id, displayId, prop, suffix = '') {
+      const el  = document.getElementById(id);
+      const disp= document.getElementById(displayId);
+      if (!el || !disp) return;
+      el.addEventListener('input', () => {
+        disp.textContent = el.value + suffix;
+      });
+      el.addEventListener('change', () => {
+        const s = loadSettings();
+        s[prop] = parseInt(el.value);
+        saveSettings(s);
+        if (prop === 'confThreshold') localStorage.setItem('dg_conf_threshold', s[prop] / 100);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = dgPageBoot('settings');
+      if (!user) return;
+
+      // Settings nav
+      document.querySelectorAll('.settings-nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.settings-nav-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+        });
+      });
+
+      // Load & apply settings
+      const settings = getSettings();
+      applySettings(settings);
+      document.getElementById('account-username').textContent = user;
+      calcStorageUsage();
+
+      // Bind all controls
+      bind('auto-detect',    'autoDetect');
+      bind('show-indicators','showIndicators');
+      bind('show-explanation','showExplanation');
+      bind('show-toasts',    'showToasts');
+      bind('conf-format',    'confFormat');
+      bind('anim-particles', 'animParticles');
+      bind('anim-scan',      'animScan');
+      bind('reduce-motion',  'reduceMotion');
+      bind('auto-health',    'autoHealth');
+      bind('save-history',   'saveHistory');
+      bind('save-thumbs',    'saveThumbs');
+      bind('history-limit',  'historyLimit', el => parseInt(el.value));
+      bind('api-url-input',  'apiUrl');
+      bind('img-quality',    'imgQuality');
+      bindRange('conf-threshold',   'conf-threshold-val',   'confThreshold',  '%');
+      bindRange('health-interval',  'health-interval-val',  'healthInterval', 's');
+      bindRange('img-quality',      'img-quality-val',      'imgQuality',     '%');
+
+      // Theme swatches
+      document.querySelectorAll('.theme-swatch').forEach(swatch => {
+        swatch.addEventListener('click', () => {
+          const theme = swatch.dataset.theme;
+          dgApplyTheme(theme);
+          updateThemeSwatches();
+          const s = loadSettings();
+          s.theme = theme;
+          saveSettings(s);
+          dgToast(`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`, 'info', 1500);
+        });
+      });
+
+      // Test API
+      document.getElementById('test-api-btn').addEventListener('click', async () => {
+        const url = document.getElementById('api-url-input').value.trim();
+        const result = document.getElementById('api-test-result');
+        result.textContent = 'Testing…';
+        try {
+          const res = await fetch(url + '/health', { signal: AbortSignal.timeout(5000) });
+          if (res.ok) {
+            result.style.color = 'var(--green)';
+            result.innerHTML = '<i class="fa-solid fa-circle-check"></i> Connected successfully!';
+          } else {
+            throw new Error('Status ' + res.status);
+          }
+        } catch (e) {
+          result.style.color = 'var(--red)';
+          result.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Connection failed — ' + e.message;
+        }
+      });
+
+      // Danger zone
+      document.getElementById('clear-history-btn').addEventListener('click', () => {
+        if (!confirm('Clear ALL detection history? This cannot be undone.')) return;
+        for (const k of Object.keys(localStorage)) {
+          if (k.startsWith('dg_hist_')) localStorage.removeItem(k);
+        }
+        calcStorageUsage();
+        dgToast('History cleared.', 'success');
+      });
+
+      document.getElementById('reset-settings-btn').addEventListener('click', () => {
+        if (!confirm('Reset all settings to defaults?')) return;
+        localStorage.removeItem(SETTINGS_KEY);
+        localStorage.removeItem('dg_conf_threshold');
+        applySettings(getSettings());
+        dgToast('Settings reset to defaults.', 'info');
+      });
+
+      document.getElementById('panel-logout-btn').addEventListener('click', () => {
+        sessionStorage.removeItem('dg_current_user');
+        window.location.href = 'index.html';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeepGuard Reports — Generate and export detailed deepfake detection reports as PDF or CSV." />
+  <title>Reports — DeepGuard v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Reports Page Styles ── */
+    .reports-header-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .report-filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+    }
+    .report-filter-label { font-size: 0.78rem; color: var(--text-muted); margin-right: 4px; }
+    .report-filter-sel {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      color: var(--text-primary); border-radius: var(--radius-sm);
+      padding: 6px 10px; font-size: 0.82rem; cursor: pointer;
+    }
+    .report-filter-sel:focus { outline: none; border-color: var(--accent-purple); }
+
+    /* Report Cards */
+    .report-list { display: flex; flex-direction: column; gap: 12px; }
+    .report-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      transition: var(--transition);
+    }
+    .report-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glow);
+      transform: translateX(4px);
+    }
+    .report-thumb {
+      width: 56px; height: 56px; border-radius: var(--radius-sm);
+      object-fit: cover; border: 2px solid var(--border);
+    }
+    .report-thumb-placeholder {
+      width: 56px; height: 56px; border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: 1.2rem;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+    }
+    .report-info { min-width: 0; }
+    .report-filename {
+      font-size: 0.88rem; font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .report-meta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .report-meta-item { font-size: 0.75rem; color: var(--text-muted); }
+    .report-meta-item strong { color: var(--text-secondary); }
+    .report-badge {
+      padding: 3px 10px; border-radius: var(--radius-full);
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .report-badge.real { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+    .report-badge.fake { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .report-badge.uncertain { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
+    .report-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+    .btn-icon {
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      color: var(--text-secondary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; transition: var(--transition);
+    }
+    .btn-icon:hover { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
+
+    /* Summary Card */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-val { font-size: 1.8rem; font-weight: 800; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .summary-lbl { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* Empty state */
+    .reports-empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .reports-empty-icon { font-size: 3rem; opacity: 0.3; margin-bottom: 16px; }
+    .reports-empty h3 { font-size: 1rem; color: var(--text-secondary); margin-bottom: 8px; }
+    .reports-empty p { font-size: 0.82rem; }
+
+    /* Modal overlay for report preview */
+    .report-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .report-modal.hidden { display: none; }
+    .report-modal-inner {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      width: 100%; max-width: 540px;
+      padding: 28px;
+      position: relative;
+    }
+    .report-modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: transparent; border: none; color: var(--text-muted);
+      font-size: 1.2rem; cursor: pointer; transition: var(--transition);
+    }
+    .report-modal-close:hover { color: var(--text-primary); }
+    .report-modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+    .report-field { margin-bottom: 12px; }
+    .report-field-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .report-field-val { font-size: 0.88rem; color: var(--text-primary); background: var(--bg-card); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .conf-bar-wrap { background: var(--bg-card); border-radius: var(--radius-full); height: 6px; margin-top: 6px; overflow: hidden; }
+    .conf-bar-fill { height: 100%; border-radius: var(--radius-full); transition: width 0.8s ease; }
+    .conf-bar-fill.real { background: var(--grad-real); }
+    .conf-bar-fill.fake { background: var(--grad-fake); }
+    .conf-bar-fill.uncertain { background: var(--grad-uncertain); }
+  </style>
+</head>
+<body>
+  <div class="bg-canvas" aria-hidden="true"></div>
+  <div class="bg-orb-3" aria-hidden="true"></div>
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <button id="sidebar-toggle" class="hamburger" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+      <a href="index.html" class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#fff;font-size:0.9rem;"></i></div>
+        <span class="logo-text">Deep<span class="grad-text">Guard</span></span>
+      </a>
+      <span class="logo-tag">Reports</span>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" id="theme-toggle-btn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <div class="user-pill"><div class="user-avatar" id="user-avatar">A</div><span class="user-name" id="user-name-label">User</span></div>
+      <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </header>
+
+  <div class="sb-overlay hidden" id="sb-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-section-label">Main</div>
+      <a href="index.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-house"></i></span><span class="sb-nav-label">Dashboard</span></a>
+      <a href="history.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><span class="sb-nav-label">History</span></a>
+      <a href="analytics.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="sb-nav-label">Analytics</span></a>
+      <a href="assistant.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-robot"></i></span><span class="sb-nav-label">AI Assistant</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">Resources</div>
+      <a href="reports.html"  class="sb-nav-btn active"><span class="sb-nav-icon"><i class="fa-solid fa-file-lines"></i></span><span class="sb-nav-label">Reports</span></a>
+      <a href="learn.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-book-open"></i></span><span class="sb-nav-label">Learn</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">System</div>
+      <a href="settings.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-gear"></i></span><span class="sb-nav-label">Settings</span></a>
+      <a href="about.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-circle-info"></i></span><span class="sb-nav-label">About</span></a>
+    </div>
+    <button class="sb-collapse-btn" id="sidebar-collapse-btn"><i class="fa-solid fa-chevron-left collapse-icon"></i><span class="collapse-label">Collapse</span></button>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="app-layout">
+    <main class="main-content" id="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header fade-up">
+        <div class="reports-header-row">
+          <div>
+            <h1 class="page-title"><span class="grad-text">Detection</span> Reports</h1>
+            <p class="page-subtitle" id="reports-subtitle">Export and review your deepfake scan reports</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" id="export-pdf-btn"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+            <button class="btn btn-ghost btn-sm" id="export-csv-btn"><i class="fa-solid fa-download"></i> Export CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Row -->
+      <div class="summary-grid fade-up animate-delay-1" id="summary-grid">
+        <div class="summary-card">
+          <div class="summary-val" id="rpt-total">0</div>
+          <div class="summary-lbl">Total Reports</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-val" id="rpt-real">0</div>
+          <div class="summary-lbl">Real Confirmed</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-val" id="rpt-fake">0</div>
+          <div class="summary-lbl">Fakes Detected</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-val" id="rpt-avg">—</div>
+          <div class="summary-lbl">Avg. Confidence</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="report-filter-bar fade-up animate-delay-2">
+        <span class="report-filter-label">Filter:</span>
+        <select class="report-filter-sel" id="filter-result">
+          <option value="all">All Results</option>
+          <option value="Real">Real Only</option>
+          <option value="Fake">Fake Only</option>
+          <option value="Uncertain">Uncertain Only</option>
+        </select>
+        <select class="report-filter-sel" id="filter-sort">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="conf-high">Highest Confidence</option>
+          <option value="conf-low">Lowest Confidence</option>
+        </select>
+        <span id="count-label" style="margin-left:auto;font-size:0.78rem;color:var(--text-muted);"></span>
+      </div>
+
+      <!-- Report List -->
+      <div class="report-list fade-up animate-delay-3" id="report-list"></div>
+
+      <!-- Empty state -->
+      <div class="reports-empty hidden" id="reports-empty">
+        <div class="reports-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></div>
+        <h3>No Reports Found</h3>
+        <p>Run detections on the dashboard to generate reports here.</p>
+        <a href="index.html" class="btn btn-primary btn-sm" style="margin-top:16px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-house"></i> Go to Dashboard
+        </a>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Report Preview Modal -->
+  <div class="report-modal hidden" id="report-modal">
+    <div class="report-modal-inner">
+      <button class="report-modal-close" id="report-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="report-modal-title"><i class="fa-solid fa-file-lines" style="margin-right:6px;color:var(--accent-purple);"></i>Detection Report</div>
+      <div id="report-modal-content"></div>
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button class="btn btn-primary btn-sm" id="modal-download-btn" style="flex:1;"><i class="fa-solid fa-download"></i> Download Report</button>
+        <button class="btn btn-ghost btn-sm" id="report-modal-close2"><i class="fa-solid fa-xmark"></i> Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <script src="shared.js"></script>
+  <script>
+    let currentUser = null;
+    let historyData = [];
+    let filteredData = [];
+    let selectedEntry = null;
+
+    function clsFor(p) {
+      if (p === 'Real') return 'real';
+      if (p === 'Uncertain') return 'uncertain';
+      return 'fake';
+    }
+
+    function renderSummary(data) {
+      const total = data.length;
+      const real = data.filter(e => e.prediction === 'Real').length;
+      const fake = data.filter(e => e.prediction === 'Fake').length;
+      const avg = total > 0 ? Math.round(data.reduce((s, e) => s + (e.confidence || 0), 0) / total) : null;
+      document.getElementById('rpt-total').textContent = total;
+      document.getElementById('rpt-real').textContent = real;
+      document.getElementById('rpt-fake').textContent = fake;
+      document.getElementById('rpt-avg').textContent = avg !== null ? avg + '%' : '—';
+      document.getElementById('reports-subtitle').textContent = `${total} report${total !== 1 ? 's' : ''} for ${currentUser}`;
+    }
+
+    function applyFilters() {
+      const resultFilter = document.getElementById('filter-result').value;
+      const sortFilter   = document.getElementById('filter-sort').value;
+      let data = [...historyData];
+      if (resultFilter !== 'all') data = data.filter(e => e.prediction === resultFilter);
+      if (sortFilter === 'oldest') data.reverse();
+      else if (sortFilter === 'conf-high') data.sort((a,b) => (b.confidence||0) - (a.confidence||0));
+      else if (sortFilter === 'conf-low')  data.sort((a,b) => (a.confidence||0) - (b.confidence||0));
+      filteredData = data;
+      renderList(data);
+    }
+
+    function renderList(data) {
+      const list  = document.getElementById('report-list');
+      const empty = document.getElementById('reports-empty');
+      const label = document.getElementById('count-label');
+      label.textContent = `${data.length} result${data.length !== 1 ? 's' : ''}`;
+      if (data.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      list.innerHTML = data.map((entry, i) => {
+        const cls = clsFor(entry.prediction);
+        const conf = entry.confidence || 0;
+        const thumb = entry.dataURL
+          ? `<img src="${entry.dataURL}" class="report-thumb" alt="thumb" />`
+          : `<div class="report-thumb-placeholder"><i class="fa-solid fa-image"></i></div>`;
+        return `
+          <div class="report-item" data-idx="${i}">
+            ${thumb}
+            <div class="report-info">
+              <div class="report-filename">${dgEscHtml(entry.filename || 'Unknown')}</div>
+              <div class="report-meta">
+                <span class="report-meta-item"><span class="report-badge ${cls}">${entry.prediction}</span></span>
+                <span class="report-meta-item"><strong>${conf}%</strong> confidence</span>
+                <span class="report-meta-item"><i class="fa-solid fa-robot" style="margin-right:3px;"></i>${entry.model || 'ViT'}</span>
+                <span class="report-meta-item"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>${entry.timestamp || '—'}</span>
+              </div>
+            </div>
+            <div class="report-actions">
+              <button class="btn-icon view-btn" title="View report" data-idx="${i}"><i class="fa-solid fa-eye"></i></button>
+              <button class="btn-icon download-btn" title="Download" data-idx="${i}"><i class="fa-solid fa-download"></i></button>
+            </div>
+          </div>`;
+      }).join('');
+
+      list.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openReportModal(filteredData[parseInt(btn.dataset.idx)]);
+        });
+      });
+      list.querySelectorAll('.download-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          downloadReportTxt(filteredData[parseInt(btn.dataset.idx)]);
+        });
+      });
+    }
+
+    function openReportModal(entry) {
+      if (!entry) return;
+      selectedEntry = entry;
+      const cls = clsFor(entry.prediction);
+      const conf = entry.confidence || 0;
+      const modal = document.getElementById('report-modal');
+      document.getElementById('report-modal-content').innerHTML = `
+        <div class="report-field">
+          <div class="report-field-label">Image</div>
+          <div class="report-field-val">${dgEscHtml(entry.filename || 'N/A')}</div>
+        </div>
+        <div class="report-field">
+          <div class="report-field-label">Detection Result</div>
+          <div class="report-field-val"><span class="report-badge ${cls}">${entry.prediction}</span></div>
+        </div>
+        <div class="report-field">
+          <div class="report-field-label">Confidence</div>
+          <div class="report-field-val">${conf}%
+            <div class="conf-bar-wrap"><div class="conf-bar-fill ${cls}" style="width:${conf}%;"></div></div>
+          </div>
+        </div>
+        <div class="report-field">
+          <div class="report-field-label">AI Explanation</div>
+          <div class="report-field-val" style="white-space:pre-wrap;">${dgEscHtml(entry.reason || 'No explanation available.')}</div>
+        </div>
+        <div class="report-field">
+          <div class="report-field-label">Model</div>
+          <div class="report-field-val">${dgEscHtml(entry.model || 'ViT DeepGuard')}</div>
+        </div>
+        <div class="report-field">
+          <div class="report-field-label">Timestamp</div>
+          <div class="report-field-val">${dgEscHtml(entry.timestamp || '—')}</div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+    }
+
+    function downloadReportTxt(entry) {
+      if (!entry) return;
+      const lines = [
+        '=== DeepGuard Detection Report ===',
+        '',
+        `Image: ${entry.filename || 'N/A'}`,
+        `Result: ${entry.prediction}`,
+        `Confidence: ${entry.confidence || 0}%`,
+        `Model: ${entry.model || 'ViT DeepGuard'}`,
+        `Timestamp: ${entry.timestamp || '—'}`,
+        '',
+        '--- AI Explanation ---',
+        entry.reason || 'N/A',
+        '',
+        '--- Key Indicators ---',
+        ...(entry.indicators || []).map(ind => `• ${ind}`),
+        '',
+        '==========================================',
+        'Generated by DeepGuard v2.0'
+      ];
+      const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `deepguard_report_${Date.now()}.txt`;
+      a.click();
+      dgToast('Report downloaded!', 'success');
+    }
+
+    function exportCSV(data) {
+      if (!data || data.length === 0) { dgToast('No data to export.', 'warning'); return; }
+      const headers = ['Filename', 'Result', 'Confidence (%)', 'Model', 'Timestamp', 'Reason'];
+      const rows = data.map(e => [
+        `"${(e.filename || '').replace(/"/g, '""')}"`,
+        e.prediction || '',
+        e.confidence || 0,
+        `"${(e.model || '').replace(/"/g, '""')}"`,
+        `"${(e.timestamp || '').replace(/"/g, '""')}"`,
+        `"${(e.reason || '').replace(/"/g, '""')}"`
+      ].join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `deepguard_reports_${Date.now()}.csv`;
+      a.click();
+      dgToast('CSV exported successfully!', 'success');
+    }
+
+    function exportPDF() {
+      dgToast('PDF export: printing as PDF is supported via browser Ctrl+P.', 'info', 4000);
+      window.print();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      currentUser = dgPageBoot('reports');
+      if (!currentUser) return;
+
+      historyData = dgGetHistory(currentUser);
+      renderSummary(historyData);
+      applyFilters();
+
+      document.getElementById('filter-result').addEventListener('change', applyFilters);
+      document.getElementById('filter-sort').addEventListener('change', applyFilters);
+
+      document.getElementById('export-csv-btn').addEventListener('click', () => exportCSV(filteredData));
+      document.getElementById('export-pdf-btn').addEventListener('click', exportPDF);
+
+      document.getElementById('report-modal-close').addEventListener('click', () => {
+        document.getElementById('report-modal').classList.add('hidden');
+      });
+      document.getElementById('report-modal-close2').addEventListener('click', () => {
+        document.getElementById('report-modal').classList.add('hidden');
+      });
+      document.getElementById('modal-download-btn').addEventListener('click', () => {
+        downloadReportTxt(selectedEntry);
+      });
+      document.getElementById('report-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('report-modal'))
+          document.getElementById('report-modal').classList.add('hidden');
+      });
+    });
+  </script>
+</body>
+</html>

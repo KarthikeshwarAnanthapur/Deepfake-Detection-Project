@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeepGuard Detection History — Browse, filter, and export all your deepfake detection results." />
+  <title>History — DeepGuard v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="history.css" />
+</head>
+<body>
+  <div class="bg-canvas" aria-hidden="true"></div>
+  <div class="bg-orb-3" aria-hidden="true"></div>
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <header class="header">
+    <div class="header-left">
+      <button id="sidebar-toggle" class="hamburger"><span></span><span></span><span></span></button>
+      <a href="index.html" class="logo"><div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#fff;font-size:0.9rem;"></i></div><span class="logo-text">Deep<span class="grad-text">Guard</span></span></a>
+      <span class="logo-tag">History</span>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" id="theme-toggle-btn"><i class="fa-solid fa-moon"></i></button>
+      <div class="user-pill"><div class="user-avatar" id="user-avatar">A</div><span class="user-name" id="user-name-label">User</span></div>
+      <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </header>
+
+  <div class="sb-overlay hidden" id="sb-overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-section-label">Main</div>
+      <a href="index.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-house"></i></span><span class="sb-nav-label">Dashboard</span></a>
+      <a href="history.html"  class="sb-nav-btn active"><span class="sb-nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><span class="sb-nav-label">History</span></a>
+      <a href="analytics.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="sb-nav-label">Analytics</span></a>
+      <a href="assistant.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-robot"></i></span><span class="sb-nav-label">AI Assistant</span></a>
+      <div class="sb-divider"></div><div class="sb-section-label">Resources</div>
+      <a href="reports.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-file-lines"></i></span><span class="sb-nav-label">Reports</span></a>
+      <a href="learn.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-book-open"></i></span><span class="sb-nav-label">Learn</span></a>
+      <div class="sb-divider"></div><div class="sb-section-label">System</div>
+      <a href="settings.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-gear"></i></span><span class="sb-nav-label">Settings</span></a>
+      <a href="about.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-circle-info"></i></span><span class="sb-nav-label">About</span></a>
+    </div>
+    <button class="sb-collapse-btn" id="sidebar-collapse-btn"><i class="fa-solid fa-chevron-left collapse-icon"></i><span class="collapse-label">Collapse</span></button>
+  </aside>
+
+  <div class="app-layout">
+    <main class="main-content" id="main-content">
+      <div class="page-header fade-up">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h1 class="page-title"><span class="grad-text">Detection</span> History</h1>
+            <p class="page-subtitle" id="history-subtitle">All your scans</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" id="export-btn"><i class="fa-solid fa-download"></i> Export CSV</button>
+            <button class="btn btn-danger btn-sm" id="clear-all-btn"><i class="fa-solid fa-trash-can"></i> Clear All</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="hist-toolbar fade-up animate-delay-1">
+        <div class="hist-search-wrap">
+          <i class="fa-solid fa-magnifying-glass hist-search-icon"></i>
+          <input type="text" id="hist-search" class="hist-search" placeholder="Search by filename…" />
+        </div>
+        <div class="hist-filters">
+          <button class="hist-filter active" data-filter="all">All</button>
+          <button class="hist-filter" data-filter="Real"><span class="hist-dot" style="background:#10b981;"></span> Real</button>
+          <button class="hist-filter" data-filter="Fake"><span class="hist-dot" style="background:#ef4444;"></span> Fake</button>
+          <button class="hist-filter" data-filter="Uncertain"><span class="hist-dot" style="background:#f59e0b;"></span> Uncertain</button>
+        </div>
+        <div class="hist-sort">
+          <label class="hist-sort-label" for="hist-sort-sel">Sort:</label>
+          <select id="hist-sort-sel" class="hist-sort-sel">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="conf-high">Confidence ↓</option>
+            <option value="conf-low">Confidence ↑</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="hist-grid fade-up animate-delay-2" id="hist-grid"></div>
+
+      <!-- Empty state -->
+      <div class="hist-empty hidden" id="hist-empty">
+        <div class="hist-empty-icon"><i class="fa-solid fa-inbox"></i></div>
+        <h3>No detections yet</h3>
+        <p>Go to the dashboard and analyze some images to build your history.</p>
+        <a href="index.html" class="btn btn-primary btn-sm" style="margin-top:16px;text-decoration:none;"><i class="fa-solid fa-house"></i> Go to Dashboard</a>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="alert"></div>
+  <script src="shared.js"></script>
+  <script src="history.js"></script>
+</body>
+</html>

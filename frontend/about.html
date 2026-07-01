@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="About DeepGuard v2.0 — AI-powered deepfake detection built with Vision Transformer, MTCNN, FastAPI, and trained on Celeb-DF v2." />
+  <title>About — DeepGuard v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── About Page Styles ── */
+    .about-hero {
+      text-align: center;
+      padding: 40px 20px 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .about-logo-big {
+      width: 72px; height: 72px;
+      background: var(--grad-primary);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: #fff;
+      margin: 0 auto 16px;
+      box-shadow: 0 0 40px rgba(124,58,237,0.4);
+    }
+    .about-app-name {
+      font-size: 2rem; font-weight: 900;
+      background: var(--grad-primary);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    .about-version {
+      display: inline-block;
+      padding: 3px 12px; border-radius: var(--radius-full);
+      background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3);
+      font-size: 0.75rem; font-weight: 700; color: var(--accent-purple);
+      margin-bottom: 12px;
+    }
+    .about-tagline {
+      font-size: 0.9rem; color: var(--text-secondary);
+      max-width: 480px; margin: 0 auto; line-height: 1.7;
+    }
+    .about-pills {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      justify-content: center; margin-top: 16px;
+    }
+    .about-pill {
+      padding: 5px 12px; border-radius: var(--radius-full);
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      font-size: 0.72rem; color: var(--text-secondary);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .about-pill i { color: var(--accent-purple); }
+
+    /* Tech Stack Grid */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .tech-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+      transition: var(--transition);
+    }
+    .tech-card:hover {
+      border-color: var(--accent-purple);
+      transform: translateY(-2px);
+    }
+    .tech-icon {
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; flex-shrink: 0;
+    }
+    .tech-icon.python  { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .tech-icon.tf      { background: rgba(245,158,11,0.15); color: var(--gold); }
+    .tech-icon.fastapi { background: rgba(16,185,129,0.15); color: var(--green); }
+    .tech-icon.vit     { background: rgba(124,58,237,0.15); color: var(--accent-purple); }
+    .tech-icon.mtcnn   { background: rgba(6,182,212,0.15); color: var(--accent-blue); }
+    .tech-icon.js      { background: rgba(245,196,0,0.15); color: #f5c400; }
+    .tech-icon.chart   { background: rgba(239,68,68,0.15); color: var(--red); }
+    .tech-icon.html    { background: rgba(249,115,22,0.15); color: #f97316; }
+    .tech-info {}
+    .tech-name { font-size: 0.84rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+    .tech-role { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Feature List */
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .feature-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      transition: var(--transition);
+    }
+    .feature-item:hover { border-color: var(--accent-purple); }
+    .feature-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(124,58,237,0.12); color: var(--accent-purple);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; flex-shrink: 0;
+    }
+    .feature-text {}
+    .feature-title { font-size: 0.84rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+    .feature-desc  { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Pipeline */
+    .pipeline {
+      display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+      justify-content: center;
+    }
+    .pipeline-step {
+      text-align: center; padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      min-width: 110px;
+      transition: var(--transition);
+    }
+    .pipeline-step:hover { border-color: var(--accent-purple); }
+    .pipeline-icon { font-size: 1.3rem; margin-bottom: 6px; }
+    .pipeline-name { font-size: 0.74rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .pipeline-tool { font-size: 0.65rem; color: var(--text-muted); }
+    .pipeline-arrow {
+      font-size: 1rem; color: var(--accent-purple); padding: 0 6px;
+      flex-shrink: 0;
+    }
+    @media (max-width: 600px) {
+      .pipeline { flex-direction: column; align-items: stretch; }
+      .pipeline-arrow { transform: rotate(90deg); text-align: center; }
+    }
+
+    /* Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 18px 12px;
+      text-align: center;
+    }
+    .metric-val {
+      font-size: 1.7rem; font-weight: 900;
+      background: var(--grad-primary);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    .metric-lbl { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* Changelog */
+    .changelog-list { display: flex; flex-direction: column; gap: 12px; }
+    .changelog-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .changelog-badge {
+      padding: 3px 8px; border-radius: var(--radius-full);
+      font-size: 0.65rem; font-weight: 700;
+      flex-shrink: 0; margin-top: 2px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .cl-new      { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+    .cl-improved { background: rgba(6,182,212,0.15);  color: var(--accent-blue); border: 1px solid rgba(6,182,212,0.3); }
+    .cl-fix      { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
+    .changelog-text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+    .changelog-text strong { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  <div class="bg-canvas" aria-hidden="true"></div>
+  <div class="bg-orb-3" aria-hidden="true"></div>
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <button id="sidebar-toggle" class="hamburger" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+      <a href="index.html" class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#fff;font-size:0.9rem;"></i></div>
+        <span class="logo-text">Deep<span class="grad-text">Guard</span></span>
+      </a>
+      <span class="logo-tag">About</span>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" id="theme-toggle-btn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <div class="user-pill"><div class="user-avatar" id="user-avatar">A</div><span class="user-name" id="user-name-label">User</span></div>
+      <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </header>
+
+  <div class="sb-overlay hidden" id="sb-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sb-section-label">Main</div>
+      <a href="index.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-house"></i></span><span class="sb-nav-label">Dashboard</span></a>
+      <a href="history.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><span class="sb-nav-label">History</span></a>
+      <a href="analytics.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="sb-nav-label">Analytics</span></a>
+      <a href="assistant.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-robot"></i></span><span class="sb-nav-label">AI Assistant</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">Resources</div>
+      <a href="reports.html"  class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-file-lines"></i></span><span class="sb-nav-label">Reports</span></a>
+      <a href="learn.html"    class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-book-open"></i></span><span class="sb-nav-label">Learn</span></a>
+      <div class="sb-divider"></div>
+      <div class="sb-section-label">System</div>
+      <a href="settings.html" class="sb-nav-btn"><span class="sb-nav-icon"><i class="fa-solid fa-gear"></i></span><span class="sb-nav-label">Settings</span></a>
+      <a href="about.html"    class="sb-nav-btn active"><span class="sb-nav-icon"><i class="fa-solid fa-circle-info"></i></span><span class="sb-nav-label">About</span></a>
+    </div>
+    <button class="sb-collapse-btn" id="sidebar-collapse-btn"><i class="fa-solid fa-chevron-left collapse-icon"></i><span class="collapse-label">Collapse</span></button>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="app-layout">
+    <main class="main-content" id="main-content">
+
+      <!-- Hero Banner -->
+      <div class="about-hero fade-up">
+        <div class="about-logo-big"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="about-app-name">DeepGuard</div>
+        <div class="about-version">v2.0 · Vision Transformer Edition</div>
+        <p class="about-tagline">
+          An AI-powered deepfake detection platform using Vision Transformers and MTCNN face analysis to classify facial images as Real, Fake, or Uncertain with professional-grade confidence scores.
+        </p>
+        <div class="about-pills">
+          <span class="about-pill"><i class="fa-solid fa-brain"></i> ViT Architecture</span>
+          <span class="about-pill"><i class="fa-solid fa-face-smile"></i> MTCNN Detection</span>
+          <span class="about-pill"><i class="fa-solid fa-database"></i> Celeb-DF v2</span>
+          <span class="about-pill"><i class="fa-solid fa-server"></i> FastAPI Backend</span>
+          <span class="about-pill"><i class="fa-solid fa-lock"></i> 100% Local</span>
+        </div>
+      </div>
+
+      <!-- Model Metrics -->
+      <div class="card fade-up animate-delay-1">
+        <div class="card-header">
+          <div class="card-icon"><i class="fa-solid fa-chart-bar"></i></div>
+          <h2 class="card-title">Model Performance</h2>
+        </div>
+        <div class="card-body">
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-val">224²</div>
+              <div class="metric-lbl">Input Resolution</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val">ViT</div>
+              <div class="metric-lbl">Architecture</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val">~5M</div>
+              <div class="metric-lbl">Model Parameters</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val">2</div>
+              <div class="metric-lbl">Output Classes</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val">16²</div>
+              <div class="metric-lbl">Patch Size</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val">196</div>
+              <div class="metric-lbl">Patches per Image</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detection Pipeline -->
+      <div class="card fade-up animate-delay-2">
+        <div class="card-header">
+          <div class="card-icon"><i class="fa-solid fa-diagram-project"></i></div>
+          <h2 class="card-title">Detection Pipeline</h2>
+        </div>
+        <div class="card-body">
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="pipeline-icon">🖼️</div>
+              <div class="pipeline-name">Upload</div>
+              <div class="pipeline-tool">JPEG / PNG / WebP</div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">👤</div>
+              <div class="pipeline-name">Face Detection</div>
+              <div class="pipeline-tool">MTCNN</div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">✂️</div>
+              <div class="pipeline-name">Crop & Resize</div>
+              <div class="pipeline-tool">224 × 224 px</div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">🔬</div>
+              <div class="pipeline-name">Patch Embed</div>
+              <div class="pipeline-tool">ViT Tokenizer</div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">🧠</div>
+              <div class="pipeline-name">Transformer</div>
+              <div class="pipeline-tool">Self-Attention</div>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">📊</div>
+              <div class="pipeline-name">Classify</div>
+              <div class="pipeline-tool">Real / Fake</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="card fade-up animate-delay-2">
+        <div class="card-header">
+          <div class="card-icon"><i class="fa-solid fa-star"></i></div>
+          <h2 class="card-title">Key Features</h2>
+        </div>
+        <div class="card-body">
+          <div class="feature-list">
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">Real-time Detection</div>
+                <div class="feature-desc">Upload and analyze face images in seconds via local FastAPI inference.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-face-smile"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">MTCNN Face Extraction</div>
+                <div class="feature-desc">Precisely crops face regions with margin before sending to the ViT model.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-comment-dots"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">AI Explainability</div>
+                <div class="feature-desc">Human-readable explanations and key indicators for every detection result.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">Analytics Dashboard</div>
+                <div class="feature-desc">Charts, trends, and statistics across all your scan history.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-robot"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">AI Assistant</div>
+                <div class="feature-desc">Built-in FAQ chatbot that answers questions about deepfakes, ViT, and MTCNN.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-crop"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">Image Cropping</div>
+                <div class="feature-desc">Interactive Cropper.js integration for precise face region selection.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-moon"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">4 Themes</div>
+                <div class="feature-desc">Dark, Light, AMOLED, and Cyberpunk themes with instant switching.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-download"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">Export Reports</div>
+                <div class="feature-desc">Download detection results as CSV or text reports for offline archiving.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fa-solid fa-lock"></i></div>
+              <div class="feature-text">
+                <div class="feature-title">100% Private</div>
+                <div class="feature-desc">All processing is local. No images sent to external servers. Data stays in your browser.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech Stack -->
+      <div class="card fade-up animate-delay-3">
+        <div class="card-header">
+          <div class="card-icon"><i class="fa-solid fa-microchip"></i></div>
+          <h2 class="card-title">Technology Stack</h2>
+        </div>
+        <div class="card-body">
+          <div class="tech-grid">
+            <div class="tech-card">
+              <div class="tech-icon python"><i class="fa-brands fa-python"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">Python 3.10+</div>
+                <div class="tech-role">Backend runtime for model inference and API serving</div>
+              </div>
+            </div>
+            <div class="tech-card">
+              <div class="tech-icon tf"><i class="fa-solid fa-brain"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">TensorFlow / Keras</div>
+                <div class="tech-role">ViT model definition, training, and inference</div>
+              </div>
+            </div>
+            <div class="tech-card">
+              <div class="tech-icon fastapi"><i class="fa-solid fa-bolt"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">FastAPI</div>
+                <div class="tech-role">High-performance REST API serving the prediction endpoint</div>
+              </div>
+            </div>
+            <div class="tech-card">
+              <div class="tech-icon vit"><i class="fa-solid fa-eye"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">Vision Transformer</div>
+                <div class="tech-role">Self-attention based image classification for deepfake detection</div>
+              </div>
+            </div>
+            <div class="tech-card">
+              <div class="tech-icon mtcnn"><i class="fa-solid fa-face-smile"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">MTCNN</div>
+                <div class="tech-role">Multi-task cascaded face detection and landmark localization</div>
+              </div>
+            </div>
+            <div class="tech-card">
+              <div class="tech-icon html"><i class="fa-brands fa-html5"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">HTML5 / CSS3</div>
+                <div class="tech-role">Semantic structure, custom design system, glassmorphism UI</div>
+              </div>
+            </div>
+            <div class="tech-card">
+              <div class="tech-icon js"><i class="fa-brands fa-js"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">Vanilla JavaScript</div>
+                <div class="tech-role">Dashboard logic, upload handling, API communication, assistant</div>
+              </div>
+            </div>
+            <div class="tech-card">
+              <div class="tech-icon chart"><i class="fa-solid fa-chart-pie"></i></div>
+              <div class="tech-info">
+                <div class="tech-name">Chart.js</div>
+                <div class="tech-role">Interactive analytics charts — donut, line, and bar visualizations</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Changelog -->
+      <div class="card fade-up animate-delay-4">
+        <div class="card-header">
+          <div class="card-icon"><i class="fa-solid fa-list-check"></i></div>
+          <h2 class="card-title">Changelog — v2.0</h2>
+        </div>
+        <div class="card-body">
+          <div class="changelog-list">
+            <div class="changelog-item">
+              <span class="changelog-badge cl-new">New</span>
+              <div class="changelog-text"><strong>Vision Transformer (ViT) Model</strong> — Replaced CNN backbone with full ViT architecture using patch embeddings and multi-head self-attention for superior deepfake detection accuracy.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-new">New</span>
+              <div class="changelog-text"><strong>Complete Multi-Page Dashboard</strong> — Analytics, History, AI Assistant, Reports, Learn, Settings, and About pages with persistent session management.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-new">New</span>
+              <div class="changelog-text"><strong>AI Explainability</strong> — Every prediction now includes a human-readable explanation and key visual indicators explaining the model's decision.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-new">New</span>
+              <div class="changelog-text"><strong>Built-in AI Assistant</strong> — FAQ-powered chatbot that answers questions about deepfakes, ViT, MTCNN, and the Celeb-DF dataset with typing animations.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-new">New</span>
+              <div class="changelog-text"><strong>4 Theme System</strong> — Dark, Light, AMOLED, and Cyberpunk themes with instant CSS variable switching, persisted across sessions.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-improved">Improved</span>
+              <div class="changelog-text"><strong>Image Preprocessing</strong> — MTCNN face detection with 30px margin, Cropper.js integration for manual face selection before analysis.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-improved">Improved</span>
+              <div class="changelog-text"><strong>Analytics Charts</strong> — Chart.js powered donut, line trend, and confidence distribution bar charts with real-time data from localStorage history.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-improved">Improved</span>
+              <div class="changelog-text"><strong>Export Capabilities</strong> — Download scan history as CSV, individual detection reports as text files, and PDF export via browser print.</div>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-badge cl-fix">Fix</span>
+              <div class="changelog-text"><strong>Session Persistence</strong> — Sessions survive page navigation using sessionStorage with automatic history restoration across all sub-pages.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="card fade-up animate-delay-4" style="text-align:center;">
+        <div class="card-body" style="padding:24px;">
+          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.8;">
+            <p>Built with ❤️ for deepfake research and media integrity verification.</p>
+            <p style="margin-top:6px;">
+              <strong>DeepGuard v2.0</strong> ·
+              Vision Transformer · MTCNN · Celeb-DF v2 · FastAPI · TensorFlow
+            </p>
+            <p style="margin-top:6px;font-size:0.72rem;">
+              For educational and research purposes. All image processing is performed locally on your machine.
+            </p>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+            <a href="learn.html" class="btn btn-ghost btn-sm" style="text-decoration:none;">
+              <i class="fa-solid fa-book-open"></i> Learn More
+            </a>
+            <a href="index.html" class="btn btn-primary btn-sm" style="text-decoration:none;">
+              <i class="fa-solid fa-magnifying-glass"></i> Start Detecting
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <script src="shared.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      dgPageBoot('about');
+    });
+  </script>
+</body>
+</html>
