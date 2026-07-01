@@ -1,10 +1,6 @@
 # 🛡️ DeepGuard – Deepfake Detection using Vision Transformers
 
 <p align="center">
-  <img src="https://cdn.corenexis.com/f/P32gm3JQ7g9.png" alt="DeepGuard Architecture" width="100%">
-</p>
-
-<p align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-Deep%20Learning-orange?logo=tensorflow)
@@ -364,7 +360,7 @@ Open the frontend and upload an image or video for prediction.
 | **Ekshitha** | https://github.com/ekshitha86 |
 | **Karthikeshwar Ananthapur** | https://github.com/KarthikeshwarAnanthapur |
 | **Harika** | https://github.com/harika880 |
-| **Sri Hitha** | https://github.com/srihithabuka |
+| **Srihitha** | https://github.com/srihithabuka |
 
 ---
 
