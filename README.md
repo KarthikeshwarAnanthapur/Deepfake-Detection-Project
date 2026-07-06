@@ -1,4 +1,4 @@
-# 🛡️ DeepGuard – Deepfake Detection using Vision Transformers
+# 🛡️ DeepGuard – Deepfake Detection using Vision Transformer
 
 <p align="center">
 
